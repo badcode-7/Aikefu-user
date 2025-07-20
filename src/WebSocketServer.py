@@ -49,6 +49,7 @@ class WebSocketServer:
 
     async def handle_connection(self, websocket: WebSocketServerProtocol):
         client_id = await self.register(websocket)
+        print(f"新客户端连接: {client_id}")
         try:
             async for message in websocket:
                 massagedata = {
@@ -56,7 +57,7 @@ class WebSocketServer:
                     'message': message
                 }
                 self.dispatcher.message_received.emit(json.dumps(massagedata))
-                # print(f"收到消息来自的 {client_id}: {message}")
+                print(f"收到消息来自的 {client_id}: {message}")
         finally:
             await self.unregister(client_id)
 

@@ -198,7 +198,7 @@ class FlaskApp:
             # 尝试以管理员权限打开文件
             with open(hosts_path, 'r+', encoding='utf-8') as file:
                 hosts_content = file.read()
-                new_entry = "127.0.0.1 iseiya.taobao.com\n"
+                new_entry = "\n127.0.0.1 iseiya.taobao.com\n"
                 if new_entry not in hosts_content:
                     file.seek(0, 2)
                     file.write(new_entry)
@@ -245,6 +245,7 @@ class FlaskApp:
         if not self.init_message_listener():
             print("消息监听初始化失败")
         else:
+            print("消息监听初始化c成功")
             while True:
                 if self.userinfo['vip'] == 1:
                     time.sleep(1)
@@ -362,11 +363,28 @@ class HomeWindow(QMainWindow):
         # 增加线程循环任务
         loop_task  =threading.Thread(target=self.loop_task)
         loop_task.start()
+        self.ui.btn_diagnose = QPushButton("运行诊断")
+        self.ui.btn_diagnose.clicked.connect(self.run_diagnosis)
         # 注入结束
         # 监听websocket服务
         self.dispatcher.message_received.connect(self.on_message_received)
         self.connectqianniu()# 连接千牛
-
+  # 在日志区域上方添加诊断按钮
+        self.ui.btn_diagnose = QPushButton("运行诊断", self.ui.home)
+        self.ui.btn_diagnose.setGeometry(QtCore.QRect(20, 180, 100, 30))  # 调整位置和大小
+        self.ui.btn_diagnose.setStyleSheet("""
+            QPushButton {
+                background-color: #4CAF50;
+                color: white;
+                border-radius: 4px;
+                padding: 5px 10px;
+                font-size: 12px;
+            }
+            QPushButton:hover {
+                background-color: #45a049;
+            }
+        """)
+        self.ui.btn_diagnose.clicked.connect(self.run_diagnosis)
         # 添加线程池和消息队列
         self.message_queue = queue.Queue()
         self.max_workers = 5  # 最大工作线程数
@@ -400,7 +418,90 @@ class HomeWindow(QMainWindow):
         # 初始化浏览器窗口和测试服务器
         self.browser_window = None
         self.test_server_thread = None
-
+    def check_js_environment(self):
+            """检查JS执行环境"""
+            try:
+                # 查找调试标记
+                marker_hwnd = win32gui.FindWindowEx(0, 0, None, "Kelin Injected")
+                if marker_hwnd:
+                    print("JS调试标记存在，表明JS已执行")
+                    return True
+                
+                # 查找控制台窗口
+                console_hwnd = win32gui.FindWindow("DevTools_WidgetDockWindow", None)
+                if console_hwnd:
+                    print("开发者工具已打开，可查看控制台日志")
+                    return True
+                    
+                print("未找到JS执行证据")
+                return False
+            except Exception as e:
+                print(f"环境检查错误: {str(e)}")
+                return False
+    def run_diagnosis(self):
+        """运行全面诊断"""
+        self.append_log_message("开始系统诊断...")
+        
+        # 1. 检查窗口是否存在
+        parent_hwnd = win32gui.FindWindow("Qt5152QWindowIcon", "千牛接待台")
+        if parent_hwnd:
+            self.append_log_message(f"找到接待台窗口: 0x{parent_hwnd:X}")
+        else:
+            self.append_log_message("未找到接待台窗口")
+        
+        # 2. 检查子窗口
+        child_hwnd = self.find_child_window(parent_hwnd, "千牛工作台", 3)
+        if child_hwnd:
+            self.append_log_message(f"找到工作台子窗口: 0x{child_hwnd:X}")
+        else:
+            self.append_log_message("未找到工作台子窗口")
+        
+        # 3. 检查JS环境
+        if self.check_js_environment():
+            self.append_log_message("JS环境检查通过")
+        else:
+            self.append_log_message("JS环境检查失败")
+        
+        # 4. 检查WebSocket连接
+        if hasattr(self, 'ws_server') and self.ws_server.clients:
+            client_count = len(self.ws_server.clients)
+            self.append_log_message(f"WebSocket连接数: {client_count}")
+        else:
+            self.append_log_message("无活跃WebSocket连接")
+        
+        # 5. 检查Flask服务
+        try:
+            response = requests.get('https://iseiya.taobao.com/imsupport', 
+                                verify=False, timeout=2)
+            if response.status_code == 200:
+                self.append_log_message("JS文件可访问")
+            else:
+                self.append_log_message(f"JS文件访问失败: HTTP {response.status_code}")
+        except Exception as e:
+            self.append_log_message(f"JS文件访问错误: {str(e)}")
+        
+        self.append_log_message("诊断完成")
+        
+    def check_js_environment(self):
+        """检查JS执行环境"""
+        try:
+            # 查找调试标记
+            marker_hwnd = win32gui.FindWindowEx(0, 0, None, "Kelin Injected")
+            if marker_hwnd:
+                print("JS调试标记存在，表明JS已执行")
+                return True
+            
+            # 查找控制台窗口
+            console_hwnd = win32gui.FindWindow("DevTools_WidgetDockWindow", None)
+            if console_hwnd:
+                print("开发者工具已打开，可查看控制台日志")
+                return True
+                
+            print("未找到JS执行证据")
+            return False
+        except Exception as e:
+            print(f"环境检查错误: {str(e)}")
+            return False
     def open_pdd_window(self):
         """打开拼多多客服窗口"""
         from src.ui.browser import BrowserWindow
@@ -480,27 +581,74 @@ class HomeWindow(QMainWindow):
 
     # 连接千牛
     def connectqianniu(self):
-        # 首先获取父窗口句柄
+        """直接查找并连接千牛接待台窗口"""
+        self.append_log_message("开始查找千牛接待台窗口...")
+        
+        # 第一步：查找主窗口
         parent_hwnd = win32gui.FindWindow("Qt5152QWindowIcon", "千牛接待台")
-        # 如果没有找到窗口，则寻找千牛客户端并打开
+        
         if not parent_hwnd:
+            self.append_log_message("未找到接待台主窗口，尝试启动千牛...")
+            # 启动千牛主程序
             os.startfile("aliim:login")
-        else:
-            # 显示窗口
-            win32gui.ShowWindow(parent_hwnd, win32con.SW_SHOWMAXIMIZED)
+            time.sleep(5)  # 等待启动
+            
+            # 再次尝试查找
+            parent_hwnd = win32gui.FindWindow("Qt5152QWindowIcon", "千牛接待台")
+            if not parent_hwnd:
+                self.append_log_message("启动千牛后仍找不到接待台窗口")
+                return False
+        
+        self.append_log_message(f"找到接待台主窗口，句柄: 0x{parent_hwnd:X}")
+        
+        # 第二步：激活窗口
+        try:
+            # 还原窗口（如果最小化）
+            win32gui.ShowWindow(parent_hwnd, win32con.SW_RESTORE)
+            
+            # 置顶窗口
+            win32gui.SetForegroundWindow(parent_hwnd)
             time.sleep(0.5)
-            child_hwnd = self.find_child_window(parent_hwnd, "千牛工作台",2)
-            print(child_hwnd,439)
+            
+            self.append_log_message("窗口已激活并置顶")
+        except Exception as e:
+            self.append_log_message(f"激活窗口错误: {str(e)}")
+        
+        # 第三步：查找工作台子窗口
+        child_hwnd = self.find_child_window(parent_hwnd, "千牛工作台", 3)
+        
+        if not child_hwnd:
+            self.append_log_message("未找到工作台子窗口")
+            return False
+        
+        self.append_log_message(f"找到工作台子窗口，句柄: 0x{child_hwnd:X}")
+        
+        # 第四步：刷新页面（确保注入JS）
+        try:
+            # 获取窗口位置
             rect = win32gui.GetWindowRect(child_hwnd)
-            x = rect[0]
-            y = rect[1]
-            # 计算相对于窗口的点击位置
-            click_x = x + 10
-            click_y = y + 10
-            # 使用 pyautogui 移动鼠标并点击
-            pyautogui.click(click_x, click_y)
-            # 模拟点击F5
-            pyautogui.hotkey('f5')
+            
+            # 计算中心点
+            center_x = rect[0] + (rect[2] - rect[0]) // 2
+            center_y = rect[1] + (rect[3] - rect[1]) // 2
+            
+            # 点击窗口中心确保焦点
+            pyautogui.click(center_x, center_y)
+            time.sleep(0.5)
+            
+            # 发送多次F5刷新
+            for i in range(3):
+                win32gui.PostMessage(child_hwnd, win32con.WM_KEYDOWN, win32con.VK_F5, 0)
+                win32gui.PostMessage(child_hwnd, win32con.WM_KEYUP, win32con.VK_F5, 0)
+                time.sleep(1)
+                self.append_log_message(f"发送刷新指令 ({i+1}/3)")
+            
+            self.append_log_message("刷新完成，等待注入JS")
+            return True
+        
+        except Exception as e:
+            self.append_log_message(f"刷新操作错误: {str(e)}")
+            return False
     
     
     # 避免发送失败事件
@@ -519,30 +667,45 @@ class HomeWindow(QMainWindow):
                 self.doClick(hwnd,290,200)
                 # pyautogui.click(x, y)
                 time.sleep(0.5)
-                # 点击回车
+                # 点击回车 
                 pyautogui.press('enter')
 
-    def find_child_window(self,parent_handle, child_window_title, index=1):
-        def callback(hwnd, hwnds):
+    def find_child_window(self, parent_handle, window_title, max_depth=3):
+        """
+        递归查找包含特定标题的子窗口
+        :param parent_handle: 父窗口句柄
+        :param window_title: 要查找的窗口标题
+        :param max_depth: 最大递归深度
+        :return: 窗口句柄或None
+        """
+        def callback(hwnd, hwnd_list):
             if win32gui.IsWindowVisible(hwnd) and win32gui.IsWindowEnabled(hwnd):
-                hwnds.append(hwnd)
+                hwnd_list.append(hwnd)
             return True
-
-        hwnds = []
-        win32gui.EnumChildWindows(parent_handle, callback, hwnds)
-
-        matched_hwnds = []
-        for hwnd in hwnds:
-            if win32gui.GetWindowText(hwnd) == child_window_title:
-                matched_hwnds.append(hwnd)
-            child_hwnd = self.find_child_window(hwnd, child_window_title, index)
-            if child_hwnd:
-                matched_hwnds.append(child_hwnd)
-
-        if len(matched_hwnds) >= index:
-            print(matched_hwnds,489)
-            # 返回最后一个
-            return matched_hwnds[len(matched_hwnds)-1]
+        
+        # 当前层级查找
+        hwnd_list = []
+        try:
+            win32gui.EnumChildWindows(parent_handle, callback, hwnd_list)
+        except Exception as e:
+            self.append_log_message(f"枚举子窗口错误: {str(e)}")
+            return None
+        
+        # 在当前层级查找匹配的窗口
+        for hwnd in hwnd_list:
+            try:
+                if win32gui.GetWindowText(hwnd) == window_title:
+                    return hwnd
+            except:
+                continue
+        
+        # 递归查找（如果还有深度）
+        if max_depth > 1:
+            for hwnd in hwnd_list:
+                result = self.find_child_window(hwnd, window_title, max_depth - 1)
+                if result:
+                    return result
+        
         return None
 
     # 查找窗口
