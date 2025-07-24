@@ -250,7 +250,98 @@ class FlaskApp:
             while True:
                 if self.userinfo['vip'] == 1:
                     time.sleep(1)
-
+class LocalDatabaseManager:
+    """本地测试模式数据库管理器"""
+    def __init__(self, db_name='app_data.db'):
+        self.db_name = db_name
+    
+    def get_system_info(self):
+        """返回模拟系统信息"""
+        return (
+            1,  # id
+            1,  # auto_login
+            1,  # save_password
+            'local_token',  # token
+            'testuser',  # account
+            'testpass',  # password
+            'http://localhost:5000',  # fastgpt_address
+            'local_key',  # fastgpt_key
+            '',  # field8
+            '',  # field9
+            '',  # field10
+            'local_token'  # field11
+        )
+    
+    def update_system_info(self, **kwargs):
+        """模拟更新系统信息"""
+        print(f"测试模式：更新系统信息 - {kwargs}")
+        return True
+    
+    def get_keywords(self):
+        """返回模拟关键词数据"""
+        return [
+            {"id": 1, "key": "发货时间", "value": "我们将在24小时内发货", "type": 1},
+            {"id": 2, "key": "退换货", "value": "7天无理由退换货", "type": 1}
+        ]
+    
+    def get_sensitive(self):
+        """返回模拟敏感词数据"""
+        return [
+            {"id": 3, "key": "垃圾", "value": "**", "type": 2},
+            {"id": 4, "key": "骗子", "value": "**", "type": 2}
+        ]
+    
+    def get_goodslist(self):
+        """返回模拟商品数据"""
+        return [
+            {"id": 1, "product_name": "测试商品1", "product_url": "http://example.com/1", "type": 1},
+            {"id": 2, "product_name": "测试商品2", "product_url": "http://example.com/2", "type": 1}
+        ]
+    
+    # 其他方法都返回模拟数据或空操作
+    def get_userinfo(self, token):
+        return {
+            'id': 1,
+            'username': '测试用户',
+            'nickname': '测试昵称',
+            'email': 'test@example.com',
+            'mobile': '13800138000',
+            'vip': 1,
+            'birthday': '2000-01-01'
+        }
+    
+    def get_association(self, data):
+        return {}
+    
+    def save_chatlog(self, data):
+        print(f"测试模式：保存聊天记录 - {data}")
+    
+    def get_goodsByProductId(self, product_id):
+        return {"name": "测试商品", "details": "商品详情"}
+    
+    # 其他方法都返回空数据或None
+    def get_keyword(self, id):
+        return None
+    
+    def add_keyword(self, *args):
+        return None
+    
+    def update_keyword(self, *args):
+        return None
+    
+    def delete_keyword(self, *args):
+        return None
+    
+    def Ajax(self, *args, **kwargs):
+        """模拟网络请求，返回空响应"""
+        class MockResponse:
+            status_code = 200
+            def json(self):
+                return {"code": 1, "data": {}}
+            def raise_for_status(self):
+                pass
+        
+        return MockResponse()
 # 首页
 class HomeWindow(QMainWindow):
     def __init__(self):
@@ -258,18 +349,22 @@ class HomeWindow(QMainWindow):
         # 实例化 Ui_MainWindow 并设置 UI
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
-        db_manager = DatabaseManager()
-        self.db = db_manager
-        self.system_info = self.db.get_system_info()                    # 获取系统信息
-        self.userinfo = self.db.get_userinfo(self.system_info[11])      # 获取用户信息              线上了
-
-        self.keywords = self.db.get_keywords()                          # 获取关键词列表
-        self.keywordskv = self.extract_keys(self.keywords)              # 提取关键词列表
-
-        self.minganciData = self.db.get_sensitive()                     # 获取敏感词列表
-        self.minganciDatakv = self.extract_keys(self.minganciData)      # 提取敏感词列表
-
-        self.goodsList = self.db.get_goodslist()                        # 获取商品列表
+        # 使用本地模拟数据库管理器
+        self.db = LocalDatabaseManager()
+        
+        # 获取系统信息 - 使用模拟数据
+        self.system_info = self.db.get_system_info()
+        
+        # 获取用户信息 - 使用模拟数据
+        self.userinfo = {
+            'nickname': '测试用户',
+            'email': 'test@example.com',
+            'mobile': '13800138000',
+            'birthday': '2000-01-01',
+            'vip': 1
+        }
+        
+        # 设置界面用户信息
         self.ui.username.setText(self.userinfo['nickname'])
         self.ui.emall.setText(self.userinfo['email'])
         self.ui.phone.setText(self.userinfo['mobile'])
@@ -296,7 +391,7 @@ class HomeWindow(QMainWindow):
         self.ui.pushKeyword.clicked.connect(self.add_new_keyword)           # 关键词添加按钮
         # self.ui.pushKeyword_2.clicked.connect(self.add_new_keyword)       # 关键词添加按钮
 
-        self.ui.mgctianjia.clicked.connect(self.add_new_sensitive)          # 敏感词添加按钮
+
         self.ui.updataBut.clicked.connect(self.updata_hosts)                # 系统设置保存按钮
         self.ui.cloerBut.clicked.connect(self.logout)                       # 系统设置退出按钮
         self.ui.newgoodsBut.clicked.connect(self.add_new_goods)             # 添加商品说明书
@@ -321,7 +416,48 @@ class HomeWindow(QMainWindow):
         self.setLayout(layout2)
         self.ui.listView.doubleClicked.connect(self.on_item_clicked)
         self.ui.listView2.doubleClicked.connect(self.on_item_clicked)
+                # 使用模拟数据填充界面
+        self.keywords = [
+            {"id": 1, "key": "发货时间", "value": "我们将在24小时内发货", "type": 1},
+            {"id": 2, "key": "退换货", "value": "7天无理由退换货", "type": 1}
+        ]
         
+        self.minganciDatakv = [
+            {"id": 3, "key": "垃圾", "value": "**", "type": 2},
+            {"id": 4, "key": "骗子", "value": "**", "type": 2}
+        ]
+        
+        self.goodsList = [
+            {"id": 1, "product_name": "测试商品1", "product_url": "http://example.com/1", "type": 1},
+            {"id": 2, "product_name": "测试商品2", "product_url": "http://example.com/2", "type": 1}
+        ]
+        # 填充关键词表格
+        self.populate_keyword_table()
+        
+        # 填充敏感词表格
+        self.populate_sensitive_table()
+        
+        # 填充商品列表
+        self.populate_goods_list()
+        
+        # 添加测试模式标识
+        self.ui.label_4.setText(f"测试模式 | 版本号: {current_version}")
+        
+        # 初始化系统设置
+        self.ui.tishici.setText("本地FastGPT地址")
+        self.ui.tishici2.setText("本地API密钥")
+        
+        # 设置默认匹配度
+        self.ui.pipeidu.setValue(80)
+        
+        # 禁用网络相关功能
+        self.ui.modify.setEnabled(False)
+        self.ui.about.setEnabled(False)
+        
+        # 添加日志消息
+        self.append_log_message("测试模式已启用")
+        self.append_log_message("跳过服务器验证")
+        self.append_log_message(f"用户: {self.userinfo['nickname']} 登录成功")
         # 加载关键词
         self.keyword_table = self.ui.tableWidget
         self.keyword_table.setColumnWidth(0, 100)
@@ -333,10 +469,8 @@ class HomeWindow(QMainWindow):
         self.minganciTable = self.ui.minganciTable
         self.minganciTable.setColumnWidth(0, 180)
         self.minganciTable.setColumnWidth(1, 200)
-        self.populate_tablea()
         self.minganciTable.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
-        self.minganciTable.customContextMenuRequested.connect(self.showContextMenuM)
-        self.minganciTable.itemChanged.connect(self.minganci_changed)
+        self.minganciTable.customContextMenuRequested.connect(self.showContextMenu)
 
         # 初始化系统设置
         self.ui.tishici.setText(self.system_info[9])
@@ -403,6 +537,37 @@ class HomeWindow(QMainWindow):
         self.browser_window = None
         self.test_server_thread = None
 
+        
+    def populate_keyword_table(self):
+        """填充关键词表格"""
+        self.keyword_table = self.ui.tableWidget
+        self.keyword_table.setRowCount(len(self.keywords))
+        
+        for row, item in enumerate(self.keywords):
+            self.keyword_table.setItem(row, 0, QTableWidgetItem(item['key']))
+            self.keyword_table.setItem(row, 1, QTableWidgetItem(item['value']))
+    
+    def populate_sensitive_table(self):
+        """填充敏感词表格"""
+        self.minganciTable = self.ui.minganciTable
+        self.minganciTable.setRowCount(len(self.minganciDatakv))
+        
+        for row, item in enumerate(self.minganciDatakv):
+            self.minganciTable.setItem(row, 0, QTableWidgetItem(item['key']))
+            self.minganciTable.setItem(row, 1, QTableWidgetItem(item['value']))
+    
+    def populate_goods_list(self):
+        """填充商品列表"""
+        self.listWidget = QListWidget()
+        self.ui.listView.setModel(self.listWidget.model())
+        
+        for item in self.goodsList:
+            self.listWidget.addItem(item['product_name'])
+        
+        # 添加模拟的"未完善"商品
+        self.listWidget2 = QListWidget()
+        self.ui.listView2.setModel(self.listWidget2.model())
+        self.listWidget2.addItem("测试商品3 (未完善)")
     def open_pdd_window(self):
         """打开拼多多客服窗口"""
         from src.ui.browser import BrowserWindow
@@ -785,8 +950,8 @@ class HomeWindow(QMainWindow):
             M.save_chatlog(message_data)
             # 敏感词替换
             if cent is not None:
-                for word, replacement in self.minganciDatakv.items():
-                    cent = cent.replace(word, replacement)
+                # for word, replacement in self.minganciDatakv.items():
+                #     cent = cent.replace(word, replacement)
                 client_object = message_data['fromid']['nick']
                 # 获取发送方账号昵称
                 account = message_data['toid']['nick']
@@ -954,73 +1119,7 @@ class HomeWindow(QMainWindow):
         else:
             QMessageBox.warning(self, "缺少输入", "请输入关键词和出发内容.")
 
-    # 敏感词：显示右键菜单
-    def showContextMenuM(self, pos):
-        contextMenu = QMenu(self)
-        deleteAction = QAction("删除选中", self)
-        deleteAction.triggered.connect(self.deleteItemc)
-        contextMenu.addAction(deleteAction)
-        contextMenu.exec(self.minganciTable.mapToGlobal(pos))
 
-    # 敏感词：修改选中项
-    def minganci_changed(self, item):
-        row = item.row()
-        data = self.minganciData[row]
-        key_item = self.minganciTable.item(row, 0)
-        value_item = self.minganciTable.item(row, 1)
-        if key_item.text() != data['key'] or value_item.text() != data['value']:
-            self.db.update_keyword(
-                data['id'], key_item.text(), value_item.text())
-            self.minganciDatakv[key_item.text()] = value_item.text()
-            del self.minganciDatakv[data['key']]
-            self.minganciData[row] = self.db.getkeyword(data['id'])
-
-    # 敏感词：删除选中项
-    def deleteItemc(self):
-        index = self.minganciTable.currentRow()
-        data = self.minganciData[index]
-        if index >= 0:
-            self.db.delete_keyword(data['id'])
-            del self.minganciDatakv[data['key']]
-            self.minganciTable.removeRow(index)
-
-    # 敏感词：添加敏感词
-    def add_new_sensitive(self):
-        new_key = self.ui.minganci.text().strip()
-        new_value = self.ui.tihuan.text().strip()
-
-        if new_key and new_value:
-            if new_key in self.keywordskv or new_key in self.minganciDatakv:
-                QMessageBox.warning(self, "重复关键词", f"这个关键词'{new_key}'已经添加过了.")
-            else:
-                if self.minganciTable.rowCount() == 0:
-                    self.minganciData = []
-
-                self.minganciData.append(
-                    self.db.add_keyword(new_key, new_value, type=2))
-
-                self.minganciDatakv[new_key] = new_value
-                row_position = self.minganciTable.rowCount()
-                self.minganciTable.insertRow(row_position)
-                self.minganciTable.setItem(
-                    row_position, 0, QTableWidgetItem(new_key))
-                self.minganciTable.setItem(
-                    row_position, 1, QTableWidgetItem(new_value))
-
-                self.ui.minganci.clear()
-                self.ui.tihuan.clear()
-        else:
-            QMessageBox.warning(self, "缺少输入", "请输入关键词和出发内容.")
-
-    # 敏感词：输出表格
-    def populate_tablea(self):
-        if self.minganciData is not None:
-            self.minganciTable.setRowCount(len(self.minganciData))
-            row = 0
-            for key, value in self.minganciDatakv.items():
-                self.minganciTable.setItem(row, 0, QTableWidgetItem(key))
-                self.minganciTable.setItem(row, 1, QTableWidgetItem(value))
-                row += 1
 
     # 输出添加首页日志
     def append_log_message(self, message):
@@ -1071,32 +1170,76 @@ class HomeWindow(QMainWindow):
 
 # 检测版本更新
 def check_for_updates():
-    # 定义线上版本信息接口的URL
-    version_check_url = 'https://kelin.kunkeji.com/api/version/index'
-    # 发送POST请求以获取线上版本信息
-    response = requests.post(version_check_url)
-    # 检查响应状态码
-    if response.status_code == 200:
-        version_data = response.json()
-        # 检查线上是否有新版本
-        for row in version_data['data']['rows']:
-            if row['oldversion'] == current_version and row['status'] == 'normal':
-                # 线上版本较新，提示用户升级
-                return False
-            else:
-                return True
-    else:
-        print("无法获取线上版本信息，请稍后再试。")
+    # # 定义线上版本信息接口的URL
+    # version_check_url = 'https://kelin.kunkeji.com/api/version/index'
+    # # 发送POST请求以获取线上版本信息
+    # response = requests.post(version_check_url)
+    # # 检查响应状态码
+    # if response.status_code == 200:
+    #     version_data = response.json()
+    #     # 检查线上是否有新版本
+    #     for row in version_data['data']['rows']:
+    #         if row['oldversion'] == current_version and row['status'] == 'normal':
+    #             # 线上版本较新，提示用户升级
+    #             return False
+    #         else:
+    #             return True
+    # else:
+    #     print("无法获取线上版本信息，请稍后再试。")
+    return True  # 默认返回True，表示不需要更新
+def create_local_db():
+    import sqlite3
+    conn = sqlite3.connect('app_data.db')
+    cursor = conn.cursor()
+    
+    # 创建 system_info 表（如果不存在）
+    cursor.execute('''
+    CREATE TABLE IF NOT EXISTS system_info (
+        id INTEGER PRIMARY KEY,
+        auto_login BOOLEAN DEFAULT 1,
+        save_password BOOLEAN DEFAULT 1,
+        token TEXT DEFAULT 'local_token',
+        account TEXT DEFAULT 'testuser',
+        password TEXT DEFAULT 'testpass',
+        fastgpt_address TEXT DEFAULT 'http://localhost:5000',
+        fastgpt_key TEXT DEFAULT 'local_key',
+        field8 TEXT DEFAULT '',
+        field9 TEXT DEFAULT '',
+        field10 TEXT DEFAULT '',
+        field11 TEXT DEFAULT 'local_token'
+    );
+    ''')
+    
+    # 插入默认记录
+    cursor.execute('''
+    INSERT OR IGNORE INTO system_info (id) VALUES (1);
+    ''')
+    
+    conn.commit()
+    conn.close()
 if __name__ == '__main__':
-    db_manager = DatabaseManager()
-    system_info = db_manager.get_system_info()      # 本地系统缓存信息
+    #线上
+    # db_manager = DatabaseManager()
+    # system_info = db_manager.get_system_info()      # 本地系统缓存信息
+    # app = QApplication(sys.argv)
+    # # 首先弹出启动画面
+    # # 在显示    窗口之前，检查版本更新
+    # if check_for_updates():
+    #     login = LoginWindow()
+    #     login.show()
+    # else:
+    #     updata = Updata(current_version)
+    #     updata.show()
+    #本地测试# 创建本地模拟数据库（如果不存在）
+
+    # 创建本地数据库
+    create_local_db()
+    
+    # 创建应用
     app = QApplication(sys.argv)
-    # 首先弹出启动画面
-    # 在显示    窗口之前，检查版本更新
-    if check_for_updates():
-        login = LoginWindow()
-        login.show()
-    else:
-        updata = Updata(current_version)
-        updata.show()
+    
+    # 测试模式：直接进入主界面
+    home = HomeWindow()
+    home.show()
+    
     sys.exit(app.exec())
