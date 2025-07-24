@@ -7,8 +7,37 @@ import requests
 SERVER_URL = 'https://kelin.kunkeji.com/api'
 
 class Database:
-    def __init__(self, db_name):
+    def __init__(self, db_name='app_data.db'):
         self.db_name = db_name
+        self._initialize_database()  # 初始化数据库表结构
+    
+    def _initialize_database(self):
+        """初始化数据库表结构"""
+        # 创建 system_info 表
+        create_system_info = """
+        CREATE TABLE IF NOT EXISTS system_info (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            auto_login BOOLEAN DEFAULT 0,
+            save_password BOOLEAN DEFAULT 0,
+            token TEXT,
+            account TEXT,
+            password TEXT,
+            fastgpt_address TEXT,
+            fastgpt_key TEXT,
+            field8 TEXT,  -- 保留字段
+            field9 TEXT,   -- 保留字段
+            field10 TEXT,  -- 保留字段
+            field11 TEXT   -- token字段（对应索引11）
+        );
+        """
+        
+        # 插入默认记录（如果不存在）
+        init_system_info = """
+        INSERT OR IGNORE INTO system_info (id) VALUES (1);
+        """
+        
+        self.execute(create_system_info)
+        self.execute(init_system_info)
 
     def _connect(self):
         return sqlite3.connect(self.db_name)

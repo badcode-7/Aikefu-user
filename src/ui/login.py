@@ -76,7 +76,7 @@ class Ui_LoginPage(object):
         self.logoBox.setSizePolicy(sizePolicy)
         self.logoBox.setMinimumSize(QSize(100, 100))
         self.logoBox.setMaximumSize(QSize(100, 100))
-        self.logoBox.setStyleSheet(u"image: url(:/login/logo.png);\n"
+        self.logoBox.setStyleSheet(u"image: url(./static/icon/logo.png);\n"
 "")
         self.logoBox.setFrameShape(QFrame.Shape.StyledPanel)
         self.logoBox.setFrameShadow(QFrame.Shadow.Raised)
@@ -344,8 +344,8 @@ class Ui_LoginPage(object):
     # setupUi
 
     def retranslateUi(self, LoginPage):
-        LoginPage.setWindowTitle(QCoreApplication.translate("LoginPage", u"\u58f3\u6797\u667a\u80fd\u5ba2\u670d", None))
-        self.loginTitle.setText(QCoreApplication.translate("LoginPage", u"\u58f3\u6797\u667a\u80fd\u5ba2\u670d", None))
+        LoginPage.setWindowTitle(QCoreApplication.translate("LoginPage", u"坤智AI客服", None))
+        self.loginTitle.setText(QCoreApplication.translate("LoginPage", u"坤智AI客服", None))
         self.label_2.setText("")
         self.username.setInputMask("")
         self.username.setPlaceholderText(QCoreApplication.translate("LoginPage", u"\u8bf7\u8f93\u5165\u8d26\u53f7", None))
@@ -358,6 +358,6 @@ class Ui_LoginPage(object):
         self.loginBut.setText("")
         self.pushButton_3.setText(QCoreApplication.translate("LoginPage", u"\u7acb\u5373\u6ce8\u518c", None))
         self.pushButton_4.setText(QCoreApplication.translate("LoginPage", u"\u5fd8\u8bb0\u5bc6\u7801", None))
-        self.label_4.setText(QCoreApplication.translate("LoginPage", u"20240824.A.52.9", None))
+        self.label_4.setText(QCoreApplication.translate("LoginPage", u"坤智AI客服 20240824.A.52.9", None))
     # retranslateUi
 

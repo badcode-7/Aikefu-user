@@ -36,6 +36,8 @@ import win32gui
 import win32con
 import win32api
 import win32process
+import ctypes
+import win32com.client  # 用于 WScript.Shell
 
 task_queue = queue.Queue()
 flask_app = None
@@ -648,40 +650,62 @@ class HomeWindow(QMainWindow):
     # 执行发送消息
     def sendMassage(self):
         # 查找千牛接待台窗口
-        hWnd = win32gui.FindWindowEx(0, 0, "Qt5152QWindowIcon", "千牛接待台")
+        hWnd = win32gui.FindWindow("Qt5152QWindowIcon", "千牛接待台")
         if not hWnd:
             print("未找到千牛接待台窗口")
             return False
-        # 获取当前焦点窗口
-        current_focus = win32gui.GetForegroundWindow()
-        # 如果窗口最小化，恢复窗口
-        if win32gui.IsIconic(hWnd):
-            win32gui.ShowWindow(hWnd, win32con.SW_RESTORE)
-        # 尝试将焦点设置到千牛窗口
+        
+        # 初始化变量
+        current_thread = None
+        target_thread = None
+        
         try:
+            # 如果窗口最小化，恢复窗口
+            if win32gui.IsIconic(hWnd):
+                win32gui.ShowWindow(hWnd, win32con.SW_RESTORE)
+            
+            # 尝试将窗口激活并置于前台
+            win32gui.BringWindowToTop(hWnd)
+            win32gui.ShowWindow(hWnd, win32con.SW_SHOW)
+            
             # 获取当前线程和目标窗口线程
             current_thread = win32api.GetCurrentThreadId()
             target_thread = win32process.GetWindowThreadProcessId(hWnd)[0]
+            
             # 附加线程输入状态
-            win32process.AttachThreadInput(current_thread, target_thread, True)
-            # 将窗口带到前台
-            win32gui.SetForegroundWindow(hWnd)
-            # 确保窗口可见
-            win32gui.ShowWindow(hWnd, win32con.SW_SHOW)
+            if current_thread != target_thread:
+                win32process.AttachThreadInput(current_thread, target_thread, True)
             
-            # 给窗口设置焦点
+            # 尝试设置焦点
             win32gui.SetFocus(hWnd)
+            win32gui.SetActiveWindow(hWnd)
             
-            # 解除线程输入状态附加
-            win32process.AttachThreadInput(current_thread, target_thread, False)
+            # 发送激活消息
+            win32gui.SendMessage(hWnd, win32con.WM_ACTIVATE, win32con.WA_ACTIVE, 0)
+            win32gui.SendMessage(hWnd, win32con.WM_SETFOCUS, 0, 0)
             
-            # 等待窗口获得焦点
+            # 检查窗口是否获得了焦点
             time.sleep(0.1)
             
-            # 检查窗口是否真的获得了焦点
+            # 如果仍然无法获取焦点，使用Alt键技巧
+            if win32gui.GetForegroundWindow() != hWnd:
+                # 使用win32api模拟Alt键按下释放
+                win32api.keybd_event(win32con.VK_MENU, 0, 0, 0)
+                time.sleep(0.05)
+                win32api.keybd_event(win32con.VK_MENU, 0, win32con.KEYEVENTF_KEYUP, 0)
+                time.sleep(0.1)
+                
+                # 再次尝试激活窗口
+                win32gui.SetForegroundWindow(hWnd)
+                win32gui.BringWindowToTop(hWnd)
+            
+            # 等待窗口激活
+            start_time = time.time()
+            while win32gui.GetForegroundWindow() != hWnd and time.time() - start_time < 1:
+                time.sleep(0.1)
+            
             if win32gui.GetForegroundWindow() == hWnd:
                 # 使用 win32api 发送回车键
-                print('发送回车键')
                 win32api.keybd_event(win32con.VK_RETURN, 0, 0, 0)  # 按下
                 time.sleep(0.05)
                 win32api.keybd_event(win32con.VK_RETURN, 0, win32con.KEYEVENTF_KEYUP, 0)  # 释放
@@ -693,13 +717,13 @@ class HomeWindow(QMainWindow):
         except Exception as e:
             print(f"发送消息时出错: {str(e)}")
             return False
-        # finally:
-        #     # 如果之前有其他窗口在前台，尝试恢复
-        #     if current_focus and current_focus != hWnd:
-        #         try:
-        #             win32gui.SetForegroundWindow(current_focus)
-        #         except:
-        #             pass
+        finally:
+            # 解除线程输入状态附加
+            if current_thread is not None and target_thread is not None and current_thread != target_thread:
+                try:
+                    win32process.AttachThreadInput(current_thread, target_thread, False)
+                except:
+                    pass
 
     def message_processor(self):
         while self.is_running:

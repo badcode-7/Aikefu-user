@@ -4,14 +4,14 @@ import random
 import requests
 import pygame
 from thefuzz import process, fuzz
-from zhipuai import ZhipuAI
 import json
-
+from zhipuai import ZhipuAI
 class Message:
     
     def __init__(self,db,ui = None):
         self.db = db
-        self.prompt = "你是一个资深的电商客服，你会根据产品的说明书准确的回答顾客所问的问题，并能根据顾客的反馈不断调整自己的服务态度和回复内容。但是在产品说明书中没有提到的或者没有产品说明书的情况下你不能按照自己的想法回答只能回答“请稍等”，本次的产品说明书内容是：" 
+        self.prompt = "你是一个资深的电商客服，你会根据产品的说明书准确的回答顾客所问的问题，并能根据顾客的反馈不断调整自己的服务态度和回复内容。但是在产品说明书中没有提到的或者没有产品说明书的情况下你不能按照自己的想法回答只能回答请稍等，本次的产品说明书内容是：" 
+        self.api_url = "http://47.121.118.101:8001/api/chat"  # 添加API地址
 
         # 获取config.json文件中的匹配度（pipeidu）的值
         with open('./config.json', 'r') as f:
@@ -117,6 +117,7 @@ class Message:
                     }
                     sysinfo = self.db.get_system_info()                                     # 获取系统信息
                     aireturn = self.aimassage(msgdata,sysinfo[10])
+                    print(aireturn)
                     if "转人工" in aireturn or aireturn == "转人工":
                         self.play_sound()
                     else:
@@ -185,6 +186,8 @@ class Message:
     def getgoodsinfo(self,goodsname):
         return "商品简介"
 
+
+
     # 智谱AI平台消息处理
     def aimassage(self,data,prompt=None):
         # 定义智谱AI平台的API密钥
@@ -200,7 +203,7 @@ class Message:
             prompt = f"{prompt}"
         else:
             prompt = f"{prompt}{knowledge}"
-       
+    
         # 初始化智谱AI客户端
         client = ZhipuAI(api_key=api_key)
         # 发起消息完成请求，使用glm-4-flash模型
@@ -226,13 +229,35 @@ class Message:
             # 使用者的会话id，用于跟踪上下文
             user_id=ccode
         )
-        # 返回AI生成的消息内容
-        return response.choices[0].message.content
         if "转人工" in response.choices[0].message.content or response.choices[0].message.content == "转人工":
             self.play_sound()
         else:
             return response.choices[0].message.content
+    # # 使用新的API接口获取AI回复
+    # def aimassage(self, data, prompt=None):
+    #     # 构建请求数据
+    #     payload = {
+    #         "session_id": data["ccode"],
+    #         "query": data["message"]
+    #     }
         
+    #     try:
+    #         # 发送POST请求到API接口
+    #         response = requests.post(self.api_url, json=payload)
+            
+    #         # 检查响应状态
+    #         if response.status_code == 200:
+    #             # 解析JSON响应
+    #             print(f"API请求成功，响应内容: {response.text}")
+    #             result = response.json()
+    #             # 返回API的回复内容
+    #             return result.get('response', '')
+    #         else:
+    #             print(f"API请求失败，状态码: {response.status_code}")
+    #             return "转人工"
+    #     except Exception as e:
+    #         print(f"API请求异常: {e}")
+    #         return "转人工"
     # 链接爬取
     def fetch_page_content(self,url):
         try:

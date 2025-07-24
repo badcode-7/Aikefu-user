@@ -671,7 +671,7 @@ class Ui_MainWindow(object):
         self.frame_5.setStyleSheet(u"border-radius: 40px;\n"
 "border:5px solid rgb(255, 255, 255);\n"
 "padding:3px;\n"
-"image: url(:/login/logo.png);\n"
+"image: url(./static/icon/logo.png);\n"
 "")
         self.frame_5.setFrameShape(QFrame.Shape.StyledPanel)
         self.frame_5.setFrameShadow(QFrame.Shadow.Raised)
@@ -828,7 +828,7 @@ class Ui_MainWindow(object):
         self.logo.setGeometry(QRect(5, 41, 65, 47))
         self.logo.setMinimumSize(QSize(65, 47))
         self.logo.setMaximumSize(QSize(65, 16777215))
-        self.logo.setStyleSheet(u"image: url(:/login/logo.png);")
+        self.logo.setStyleSheet(u"image: url(./static/icon/logo.png);\n")
         MainWindow.setCentralWidget(self.centralwidget)
 
         self.retranslateUi(MainWindow)
@@ -844,7 +844,7 @@ class Ui_MainWindow(object):
 
     def retranslateUi(self, MainWindow):
         MainWindow.setWindowTitle(QCoreApplication.translate("MainWindow", u"MainWindow", None))
-        self.home_top_title.setText(QCoreApplication.translate("MainWindow", u"<html><head/><body><p><span style=\" font-size:12pt; color:#21252b;\">\u9996\u9875</span></p></body></html>", None))
+        self.home_top_title.setText(QCoreApplication.translate("MainWindow", u"<html><head/><body><p><span style=\" font-size:12pt; color:#21252b;\">坤智AI客服</span></p></body></html>", None))
         self.mini_but.setText("")
         self.close_but.setText("")
         ___qtablewidgetitem = self.tableWidget.horizontalHeaderItem(0)
@@ -874,7 +874,7 @@ class Ui_MainWindow(object):
         self.label_10.setText(QCoreApplication.translate("MainWindow", u"\u89d2\u8272\u63cf\u8ff0", None))
         self.tishici.setPlaceholderText(QCoreApplication.translate("MainWindow", u"\u8fd9\u91cc\u7684\u63d0\u793a\u8bcd\u7528\u4e8e\u5728\u5546\u54c1\u6709\u8bf4\u660e\u4e66\u7684\u60c5\u51b5\u4e0b\uff0cAI\u4f1a\u6309\u7167\u4f60\u7684\u63cf\u8ff0\u5145\u5f53\u89d2\u8272", None))
         self.label_12.setText(QCoreApplication.translate("MainWindow", u"\u901a\u7528\u89d2\u8272\u63cf\u8ff0", None))
-        self.tishici2.setPlaceholderText(QCoreApplication.translate("MainWindow", u"\u8fd9\u91cc\u7684\u63d0\u793a\u8bcd\u7528\u4e8e\u65e0\u5546\u54c1\u8bf4\u660e\u4e66\u7684\u60c5\u51b5\u4e0b\uff0c\u5982\u679c\u5728\u6ca1\u6709\u77e5\u8bc6\u548c\u5173\u952e\u8bcd\u5339\u914d\u7684\u60c5\u51b5\u4e0b\u5e0c\u671b\u63d0\u9192\u4eba\u5de5\u63a5\u5165\uff0c\u8bf7\u5728\u6b64\u586b\u5199\u201c\u53ea\u80fd\u56de\u590d\u2018\u8bf7\u7a0d\u7b49\u2019\u201d", None))
+        self.tishici2.setPlaceholderText(QCoreApplication.translate("MainWindow", u"这里的提示词用于在商品有说明书的情况下，坤智AI会按照你的描述充当角色", None))
         self.label_3.setText("")
         self.label_4.setText("")
         self.label_5.setText("")
