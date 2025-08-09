@@ -478,10 +478,7 @@ class HomeWindow(QMainWindow):
         self.show()
         self.append_log_message(f"{self.userinfo['nickname']}登录成功")
 
-        # 获取config.json文件中的配置信息
-        with open('config.json', 'r') as f:
-            config = json.load(f)
-        self.pipeidu = config["pipeidu"]
+        self.pipeidu = 59
         # 设置匹配度
         self.ui.pipeidu.setValue(self.pipeidu)
         # 绑定滑动事件

@@ -14,9 +14,7 @@ class Message:
         self.api_url = "http://47.121.118.101:8001/api/chat"  # 添加API地址
 
         # 获取config.json文件中的匹配度（pipeidu）的值
-        with open('./config.json', 'r') as f:
-            config = json.load(f)
-        self.pipeidu = config['pipeidu']
+        self.pipeidu = 59
         self.ui = ui
         print(self.pipeidu,'匹配度')
 
