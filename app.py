@@ -50,23 +50,23 @@ class LoginWindow(QMainWindow):
         # 实例化 Ui_MainWindow 并设置 UI
         db_manager = DatabaseManager()
         self.db = db_manager
-        system_info = db_manager.get_system_info()
-        self.sinfo = system_info
+        # system_info = db_manager.get_system_info()
+        self.sinfo = True
 
         self.ui = Ui_LoginPage()
         self.ui.setupUi(self)
-        if self.sinfo[7]:
-            self.ui.username.setText(self.sinfo[7])
-        if self.sinfo[5] and self.sinfo[8]:
-            self.ui.checkBox.setChecked(True)
-            self.ui.password.setText(self.sinfo[8])
-        if self.sinfo[6]:
-            self.ui.checkBox_2.setChecked(True)
+        # if self.sinfo[7]:
+        #     self.ui.username.setText(self.sinfo[7])
+        # if self.sinfo[5] and self.sinfo[8]:
+        #     self.ui.checkBox.setChecked(True)
+        #     self.ui.password.setText(self.sinfo[8])
+        # if self.sinfo[6]:
+        #     self.ui.checkBox_2.setChecked(True)
 
-        self.ui.checkBox_2.clicked.connect(self.change_checkBox)
-        self.ui.checkBox.clicked.connect(self.change_checkBox)
-        self.ui.pushButton_3.clicked.connect(self.gotoregister)
-        self.ui.pushButton_4.clicked.connect(self.gotoresetpwd)
+        # self.ui.checkBox_2.clicked.connect(self.change_checkBox)
+        # self.ui.checkBox.clicked.connect(self.change_checkBox)
+        # self.ui.pushButton_3.clicked.connect(self.gotoregister)
+        # self.ui.pushButton_4.clicked.connect(self.gotoresetpwd)
         # 绑定登录事件
         self.ui.loginBut.clicked.connect(self.login)
         # 设置无标题窗口
@@ -132,11 +132,11 @@ class LoginWindow(QMainWindow):
             self.show_error_message("登录失败：未返回 access_token")
             return
 
-        # 持久化（原表结构第 12 列 self.system_info[11] 放 token）
-        if self.ui.checkBox.isChecked() or self.ui.checkBox_2.isChecked():
-            self.db.update_system_info(account=username)
-            self.db.update_system_info(password=password)
-        self.db.update_system_info(token=access_token)
+        # # 持久化（原表结构第 12 列 self.system_info[11] 放 token）
+        # if self.ui.checkBox.isChecked() or self.ui.checkBox_2.isChecked():
+        #     self.db.update_system_info(account=username)
+        #     self.db.update_system_info(password=password)
+        # self.db.update_system_info(token=access_token)
 
         # 拉取当前用户（/users/me）
         try:
@@ -270,8 +270,8 @@ class HomeWindow(QMainWindow):
         self.ui.setupUi(self)
         db_manager = DatabaseManager()
         self.db = db_manager
-        self.system_info = self.db.get_system_info()                    # 获取系统信息
-        self.userinfo = self.db.get_userinfo(self.system_info[11])      # 获取用户信息              线上了
+        # self.system_info = self.db.get_system_info()                    # 获取系统信息
+        # self.userinfo = self.db.get_userinfo(self.system_info[11])      # 获取用户信息              线上了
 
         self.keywords = self.db.get_keywords()                          # 获取关键词列表
         self.keywordskv = self.extract_keys(self.keywords)              # 提取关键词列表
@@ -280,10 +280,10 @@ class HomeWindow(QMainWindow):
         self.minganciDatakv = self.extract_keys(self.minganciData)      # 提取敏感词列表
 
         self.goodsList = self.db.get_goodslist()                        # 获取商品列表
-        self.ui.username.setText(self.userinfo['nickname'])
-        self.ui.emall.setText(self.userinfo['email'])
-        self.ui.phone.setText(self.userinfo['mobile'])
-        self.ui.birthday.setText(self.userinfo['birthday'])
+        # self.ui.username.setText(self.userinfo['nickname'])
+        # self.ui.emall.setText(self.userinfo['email'])
+        # self.ui.phone.setText(self.userinfo['mobile'])
+        # self.ui.birthday.setText(self.userinfo['birthday'])
         # 设置无标题窗口
         self.setWindowFlags(QtCore.Qt.FramelessWindowHint)
         # 设置背景透明
@@ -309,8 +309,7 @@ class HomeWindow(QMainWindow):
         # 列表清空并给出占位提示
         self.ui.listView.setEnabled(False)
         self.ui.listView2.setEnabled(False)
-        self.listWidget.addItem("（功能待上线）")
-        self.listWidget2.addItem("（功能待上线）")
+
         
         # 加载关键词
         self.keyword_table = self.ui.tableWidget
@@ -329,10 +328,10 @@ class HomeWindow(QMainWindow):
         self.minganciTable.itemChanged.connect(self.minganci_changed)
 
         # 初始化系统设置
-        self.ui.tishici.setText(self.system_info[9])
-        self.ui.tishici2.setText(self.system_info[10])
+        # self.ui.tishici.setText(self.system_info[9])
+        # self.ui.tishici2.setText(self.system_info[10])
         self.show()
-        self.append_log_message(f"{self.userinfo['nickname']}登录成功")
+        self.append_log_message(f"登录成功")
 
         # 获取config.json文件中的配置信息
         with open('config.json', 'r') as f:
@@ -753,8 +752,8 @@ class HomeWindow(QMainWindow):
     # 退出登录
     def logout(self, event):
         # 清掉自动登录、token
-        self.db.update_system_info(auto_login=0)
-        self.db.update_system_info(token="")
+        # self.db.update_system_info(auto_login=0)
+        # self.db.update_system_info(token="")
         QMessageBox.information(self, "提示", "已退出登录")
         self.close()
 
@@ -771,8 +770,8 @@ class HomeWindow(QMainWindow):
     def updata_hosts(self):
         paiurl = self.ui.tishici.toPlainText()
         apikey = self.ui.tishici2.toPlainText()
-        self.db.update_system_info(fastgpt_address=paiurl)
-        self.db.update_system_info(fastgpt_key=apikey)
+        # self.db.update_system_info(fastgpt_address=paiurl)
+        # self.db.update_system_info(fastgpt_key=apikey)
         QMessageBox.critical(self, "成功", '保存成功')
 
     # 弹出错误信息
@@ -783,7 +782,7 @@ class HomeWindow(QMainWindow):
     # 开启flask服务
     def run_flask(self):
         global flask_app
-        flask_app = FlaskApp(self.userinfo)
+        flask_app = FlaskApp()
         flask_app.run()
 
     # 开启websocket服务
@@ -1202,7 +1201,7 @@ def check_for_updates():
 
 if __name__ == '__main__':
     db_manager = DatabaseManager()
-    system_info = db_manager.get_system_info()      # 本地系统缓存信息
+    # system_info = db_manager.get_system_info()      # 本地系统缓存信息
     app = QApplication(sys.argv)
     # 首先弹出启动画面
     # 在显示    窗口之前，检查版本更新

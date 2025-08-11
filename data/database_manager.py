@@ -2,7 +2,7 @@ import sqlite3
 from contextlib import closing
 from PySide6.QtWidgets import QMessageBox,QWidget
 import requests
-from app.constants import AUTH_BASE  # 新
+from constants import AUTH_BASE  # 新
 
 SERVER_URL = AUTH_BASE  # 改成你自己的服务（当前只有 /register /login /users/me /health）
 
