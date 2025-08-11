@@ -16,6 +16,7 @@ from pathlib import Path
 from src.ui.home import Ui_MainWindow
 from src.ui.login import Ui_LoginPage
 from src.Updata import Updata
+from constants import AUTH_BASE
 
 import webbrowser
 import requests
@@ -104,44 +105,53 @@ class LoginWindow(QMainWindow):
             self.db.update_system_info(auto_login=0)
 
     def login(self):
-        # 获取用户输入的用户名和密码
         username = self.ui.username.text()
         password = self.ui.password.text()
-        # 数据验证
         if not username or not password:
             self.show_error_message("用户名和密码不能为空！")
             return
-        # 构建请求数据
-        data = {
-            'account': username,
-            'password': password
-        }
+
+        # 你的 FastAPI：/login 接收 JSON，返回 {access_token, token_type}
+        try:
+            r = requests.post(
+                f"{AUTH_BASE}/login",
+                json={"username": username, "password": password},
+                timeout=8,
+            )
+        except Exception as e:
+            self.show_error_message(f"登录请求失败：{e}")
+            return
+
+        if r.status_code != 200:
+            self.show_error_message("登录失败，请检查用户名或密码")
+            return
+
+        data = r.json()
+        access_token = data.get("access_token")
+        if not access_token:
+            self.show_error_message("登录失败：未返回 access_token")
+            return
+
+        # 持久化（原表结构第 12 列 self.system_info[11] 放 token）
         if self.ui.checkBox.isChecked() or self.ui.checkBox_2.isChecked():
             self.db.update_system_info(account=username)
             self.db.update_system_info(password=password)
-        # 发起API请求
-        response = requests.post('https://kelin.kunkeji.com/api/user/login', data=data)
-        # 处理响应
-        if response.status_code == 200:
-            # 假设登录成功时，返回的JSON数据中有一个'success'字段为True
-            response_data = response.json()
-            if response_data['code'] == 1:
-                userinfo = response_data['data']['userinfo']
-                # 储存用户信息
-                self.db.update_system_info(token=userinfo['token'])
-                # 判断用户是否是会员
-                if userinfo['vip'] == 1:
-                    self.homewin = HomeWindow()
-                    self.homewin.show()
-                    self.close()
-                else:
-                    self.show_error_message(
-                        "您还不是会员，请登录壳林官网(kelin.kunkeji.com)的会员中心购买！")
-                # 这里可以添加登录成功后的操作，比如跳转到主界面
-            else:
-                self.show_error_message("登录失败，请检查用户名和密码！")
-        else:
-            self.show_error_message("登录请求失败，请稍后再试！")
+        self.db.update_system_info(token=access_token)
+
+        # 拉取当前用户（/users/me）
+        try:
+            me = requests.get(
+                f"{AUTH_BASE}/users/me",
+                headers={"Authorization": f"Bearer {access_token}"},
+                timeout=8,
+            ).json()
+        except Exception:
+            me = {"username": username, "email": ""}
+
+        # 你的老逻辑依赖 userinfo['vip'] 判断，这里先全部放行
+        self.homewin = HomeWindow()
+        self.homewin.show()
+        self.close()
 
     def show_error_message(self, message):
         # 显示错误消息
@@ -168,12 +178,13 @@ class LoginWindow(QMainWindow):
         self.setCursor(QtGui.QCursor(QtCore.Qt.ArrowCursor))
 
     def gotoregister(self):
-        # 打开指定网址
-        webbrowser.open('https://kelin.kunkeji.com/index/user/register.html')
+        webbrowser.open(f"{AUTH_BASE}/docs#/default/register_user_register_post")
+        # 或者改为弹框提示“请在本客户端注册页使用”，如果你准备做本地注册窗体
 
     def gotoresetpwd(self):
-        # 打开指定网址
-        webbrowser.open('https://kelin.kunkeji.com/index/user/login.html')
+        # 你的后端还没重置密码接口的话先简单提示
+        self.show_error_message("重置密码功能暂未开放，请联系管理员")
+
 
 
 # 这里进行js注入工作，注入的js文件可以自行编写，也可以使用我们提供的kelin.js文件
@@ -761,19 +772,12 @@ class HomeWindow(QMainWindow):
 
     # 退出登录
     def logout(self, event):
-        apiurl = 'https://kelin.kunkeji.com/api/user/logout'
-        token = self.system_info[11]
-        headers = {'token': f'{token}'}
-        r = requests.post(apiurl, headers=headers)
-        response_data = r.json()
-        if response_data['code'] == 1:
-            self.db.update_system_info(auto_login=0)
-            self.append_log_message("退出成功")
-            self.closeEvent(event)
-            QMessageBox.information(self, "提示", '退出成功')
-            self.close()
-        else:
-            self.show_error_message(f'退出失败')
+        # 清掉自动登录、token
+        self.db.update_system_info(auto_login=0)
+        self.db.update_system_info(token="")
+        QMessageBox.information(self, "提示", "已退出登录")
+        self.close()
+
 
     # 添加商品说明书
     def add_new_goods(self, goodsid=None,type=1):
