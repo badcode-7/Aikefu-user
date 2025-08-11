@@ -297,40 +297,20 @@ class HomeWindow(QMainWindow):
         # 绑定按钮的点击事件
         # lambda:self.ui.stackedWidget.setCurrentIndex(0)
         self.ui.home_but.clicked.connect(lambda: self.munuBut(0))
-        self.ui.massg_but.clicked.connect(lambda: self.munuBut(1))          # 敏感词按钮
-        self.ui.keyword_but.clicked.connect(lambda: self.munuBut(2))        # 关键词按钮
-        self.ui.setup_but.clicked.connect(lambda: self.munuBut(3))
-        self.ui.my_but.clicked.connect(lambda: self.munuBut(4))
-
-        self.ui.pushButton_2.clicked.connect(self.connectqianniu)
-        self.ui.pushKeyword.clicked.connect(self.add_new_keyword)           # 关键词添加按钮
-        # self.ui.pushKeyword_2.clicked.connect(self.add_new_keyword)       # 关键词添加按钮
-
-        self.ui.mgctianjia.clicked.connect(self.add_new_sensitive)          # 敏感词添加按钮
-        self.ui.updataBut.clicked.connect(self.updata_hosts)                # 系统设置保存按钮
-        self.ui.cloerBut.clicked.connect(self.logout)                       # 系统设置退出按钮
-        self.ui.newgoodsBut.clicked.connect(self.add_new_goods)             # 添加商品说明书
-        self.ui.refresh.clicked.connect(self.get_goods_list)                # 刷新商品说明书
-
-        self.ui.modify.clicked.connect(lambda: self.openweb('https://kelin.kunkeji.com/index/user/index.html'))
-        self.ui.about.clicked.connect(lambda: self.openweb('https://kelin.kunkeji.com'))
-        # 商品说明书--已完善
-        self.goodsList = []
-        self.listWidget = QListWidget()
-        self.ui.listView.setModel(self.listWidget.model())
-        layout = QVBoxLayout()
-        layout.addWidget(self.ui.listView)
-        # 商品说明书--未完善
-        self.listWidget2 = QListWidget()
-        self.ui.listView2.setModel(self.listWidget2.model())
-        layout2 = QVBoxLayout()
-        layout2.addWidget(self.ui.listView2)
-        
-        self.get_goods_list()
-        self.setLayout(layout)
-        self.setLayout(layout2)
-        self.ui.listView.doubleClicked.connect(self.on_item_clicked)
-        self.ui.listView2.doubleClicked.connect(self.on_item_clicked)
+        # 隐藏/禁用未实现功能按钮
+        self.ui.massg_but.setEnabled(False)      # 敏感词管理
+        self.ui.keyword_but.setEnabled(False)    # 关键词管理
+        self.ui.setup_but.setEnabled(False)      # 系统设置中对接外部的部分
+        self.ui.my_but.setEnabled(False)
+        self.ui.refresh.setEnabled(False)
+        self.ui.newgoodsBut.setEnabled(False)
+        self.ui.modify.setEnabled(False)
+        self.ui.about.setEnabled(False)
+        # 列表清空并给出占位提示
+        self.ui.listView.setEnabled(False)
+        self.ui.listView2.setEnabled(False)
+        self.listWidget.addItem("（功能待上线）")
+        self.listWidget2.addItem("（功能待上线）")
         
         # 加载关键词
         self.keyword_table = self.ui.tableWidget
@@ -1214,22 +1194,12 @@ class HomeWindow(QMainWindow):
 
 # 检测版本更新
 def check_for_updates():
-    # 定义线上版本信息接口的URL
-    version_check_url = 'https://kelin.kunkeji.com/api/version/index'
-    # 发送POST请求以获取线上版本信息
-    response = requests.post(version_check_url)
-    # 检查响应状态码
-    if response.status_code == 200:
-        version_data = response.json()
-        # 检查线上是否有新版本
-        for row in version_data['data']['rows']:
-            if row['oldversion'] == current_version and row['status'] == 'normal':
-                # 线上版本较新，提示用户升级
-                return False
-            else:
-                return True
-    else:
-        print("无法获取线上版本信息，请稍后再试。")
+    try:
+        r = requests.get(f"{AUTH_BASE}/health", timeout=3)
+        return True if r.status_code == 200 else True  # 一律允许进入登录
+    except Exception:
+        return True
+
 if __name__ == '__main__':
     db_manager = DatabaseManager()
     system_info = db_manager.get_system_info()      # 本地系统缓存信息
