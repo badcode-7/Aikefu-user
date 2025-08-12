@@ -21,18 +21,14 @@ class WebSocketServer:
     async def register(self, websocket: WebSocketServerProtocol):
         client_id = str(uuid.uuid4())  # Generate a unique ID for the client
         self.clients[client_id] = websocket
-        self.ui.textEdit.append(f"连接成功")
-        self.ui.qianniu_state.setText(f"已连接")
-        self.ui.pushButton_2.hide()
+        # 避免在非主线程更新 UI，改为仅打印日志
+        print("WebSocket 连接成功", client_id)
         return client_id
 
     async def unregister(self, client_id: str):
         websocket = self.clients.pop(client_id, None)
         if websocket:
-            self.ui.textEdit.append(f"已断开")
             print(f"终端断开: {client_id} - {websocket.remote_address}")
-            self.ui.qianniu_state.setText(f"未连接")
-            self.ui.pushButton_2.show()
 
     async def send_message_to_client(self, client_id: str, message: str):
         websocket = self.clients.get(client_id)
@@ -56,7 +52,10 @@ class WebSocketServer:
                     'client_id':client_id,
                     'message': message
                 }
-                self.dispatcher.message_received.emit(json.dumps(massagedata))
+                try:
+                    self.dispatcher.message_received.emit(json.dumps(massagedata))
+                except Exception as e:
+                    print(f"分发消息异常: {e}")
                 print(f"收到消息来自的 {client_id}: {message}")
         finally:
             await self.unregister(client_id)
@@ -78,8 +77,12 @@ class WebSocketServer:
         except Exception as e:
             print(f"运行错误: {e}")
         finally:
-            if not self.loop.is_closed():
-                self.loop.close()
+            try:
+                if self.loop and not self.loop.is_closed():
+                    self.loop.stop()
+                    self.loop.close()
+            except Exception:
+                pass
 
     async def close_connections(self):
         # 关闭所有客户端连接

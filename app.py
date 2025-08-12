@@ -21,6 +21,8 @@ from constants import AUTH_BASE
 import webbrowser
 import requests
 import threading
+import faulthandler
+import atexit
 import pyautogui
 import json
 import threading
@@ -33,6 +35,7 @@ import signal
 import requests
 import webbrowser
 import sys
+import traceback
 import win32gui
 import win32con
 import win32api
@@ -42,6 +45,55 @@ task_queue = queue.Queue()
 flask_app = None
 ws_server = None
 current_version = "1.0.0.13"
+
+# 全局异常与 Qt 消息钩子，避免异常直接导致程序退出
+def _write_crash_log(prefix: str, content: str):
+    try:
+        with open('crash.log', 'a', encoding='utf-8') as f:
+            f.write(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] {prefix}: {content}\n\n")
+    except Exception:
+        pass
+
+def _excepthook(exc_type, exc_value, exc_traceback):
+    if issubclass(exc_type, KeyboardInterrupt):
+        return
+    tb = ''.join(traceback.format_exception(exc_type, exc_value, exc_traceback))
+    print("未捕获异常：", tb)
+    _write_crash_log('PY', tb)
+
+def _qt_message_handler(mode, context, message):
+    try:
+        _write_crash_log('QT', f"{message}")
+    except Exception:
+        pass
+
+# 捕获线程中的未处理异常（Python 3.8+）
+def _thread_excepthook(args):
+    try:
+        tb = ''.join(traceback.format_exception(args.exc_type, args.exc_value, args.exc_traceback))
+        print("线程异常：", tb)
+        _write_crash_log('TH', tb)
+    except Exception:
+        pass
+
+# 启用 faulthandler，捕获崩溃信号和死锁堆栈
+_faulthandler_file = None
+def _enable_faulthandler():
+    global _faulthandler_file
+    try:
+        _faulthandler_file = open('faulthandler.log', 'a', encoding='utf-8')
+        faulthandler.enable(_faulthandler_file)
+    except Exception:
+        pass
+
+def _disable_faulthandler():
+    global _faulthandler_file
+    try:
+        if _faulthandler_file:
+            _faulthandler_file.flush()
+            _faulthandler_file.close()
+    except Exception:
+        pass
 
 # 登录
 class LoginWindow(QMainWindow):
@@ -89,8 +141,12 @@ class LoginWindow(QMainWindow):
         self.show()
 
     def check_and_login_if_needed(self):
-        if self.sinfo[6]:  # 假设self.sinfo[6]为True时表示需要自动登录
-            self.login()
+        try:
+            if isinstance(self.sinfo, (list, tuple)) and len(self.sinfo) > 6 and self.sinfo[6]:
+                self.login()
+        except Exception:
+            pass
+
 
     def change_checkBox(self):
         if self.ui.checkBox.isChecked():
@@ -408,6 +464,8 @@ class HomeWindow(QMainWindow):
         # 初始化浏览器窗口和测试服务器
         self.browser_window = None
         self.test_server_thread = None
+
+        # 已在 QApplication 创建前设置 DPI 策略
     def check_js_environment(self):
             """检查JS执行环境"""
             try:
@@ -749,6 +807,15 @@ class HomeWindow(QMainWindow):
 
         self.add_new_goods(self.goodsList[goodsindex]['id'],type=type)
 
+    # 为配合 Qt 的 connectSlotsByName 自动连接，补充具名槽函数，消除警告
+    @Slot(QModelIndex)
+    def on_listView_clicked(self, index):
+        self.on_item_clicked(index)
+
+    @Slot(QModelIndex)
+    def on_listView2_clicked(self, index):
+        self.on_item_clicked(index)
+
     # 退出登录
     def logout(self, event):
         # 清掉自动登录、token
@@ -780,10 +847,12 @@ class HomeWindow(QMainWindow):
         QMessageBox.critical(self, "错误", message)
 
     # 开启flask服务
+    # HomeWindow.run_flask
     def run_flask(self):
         global flask_app
-        flask_app = FlaskApp()
+        flask_app = FlaskApp(userinfo={"vip": 1})
         flask_app.run()
+
 
     # 开启websocket服务
     def run_websocket(self):
@@ -860,7 +929,8 @@ class HomeWindow(QMainWindow):
                     if processed_data is not None:
                         self.send_to_client(processed_data)
                 except Exception as e:
-                    print(f"处理消息时出错: {str(e)}")
+                    print(f"处理或发送消息时出错: {str(e)}")
+                    _write_crash_log('BUS', f"message_processor inner: {e}")
                 finally:
                     self.message_queue.task_done()
                     
@@ -868,6 +938,7 @@ class HomeWindow(QMainWindow):
                 continue
             except Exception as e:
                 print(f"消息处理器出错: {str(e)}")
+                _write_crash_log('BUS', f"message_processor outer: {e}")
                 continue
 
     def on_message_received(self, message):
@@ -880,8 +951,8 @@ class HomeWindow(QMainWindow):
                 self.message_queue.put(messages)
                 
         except KeyboardInterrupt:
-            print("程序被用户中断，正在执行清理工作...")
-            self.closeEvent(None)
+            # 避免误触 Ctrl+C 等触发应用整体退出
+            print("捕获到 KeyboardInterrupt，已忽略以保持服务运行。")
         except Exception as e:
             print(f"接收消息时出错: {str(e)}")
 
@@ -1179,12 +1250,18 @@ class HomeWindow(QMainWindow):
         for worker in self.worker_threads:
             worker.join(timeout=1)
             
-        # 关闭其他服务
-        if ws_server:
-            print("正在关闭 WebSocket 服务器...")
-            ws_server.stop_server()
-        if flask_app:
-            flask_app.shutdown()
+        # 关闭其他服务（放入 try，避免关闭异常导致崩溃）
+        try:
+            if ws_server:
+                print("正在关闭 WebSocket 服务器...")
+                ws_server.stop_server()
+        except Exception as e:
+            print(f"关闭 WebSocket 失败: {e}")
+        try:
+            if flask_app:
+                flask_app.shutdown()
+        except Exception as e:
+            print(f"关闭 Flask 失败: {e}")
 
         print("所有服务器已关闭，程序退出。")
         if event:
@@ -1200,6 +1277,27 @@ def check_for_updates():
         return True
 
 if __name__ == '__main__':
+    # 安装全局异常/Qt消息处理，避免异常导致崩溃并记录日志
+    sys.excepthook = _excepthook
+    try:
+        threading.excepthook = _thread_excepthook
+    except Exception:
+        pass
+    _enable_faulthandler()
+    atexit.register(_disable_faulthandler)
+    try:
+        from PySide6.QtCore import qInstallMessageHandler
+        qInstallMessageHandler(_qt_message_handler)
+    except Exception:
+        pass
+
+    # DPI 设置必须在 QApplication 创建前调用
+    try:
+        QApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling, True)
+        QApplication.setHighDpiScaleFactorRoundingPolicy(QtCore.Qt.HighDpiScaleFactorRoundingPolicy.PassThrough)
+    except Exception:
+        pass
+
     db_manager = DatabaseManager()
     # system_info = db_manager.get_system_info()      # 本地系统缓存信息
     app = QApplication(sys.argv)

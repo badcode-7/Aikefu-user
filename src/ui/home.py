@@ -257,7 +257,6 @@ class Ui_MainWindow(object):
         self.pushButton_2.setMaximumSize(QSize(60, 24))
         self.pushButton_2.setStyleSheet(u"width: 60px;\n"
 "height: 24px;\n"
-"box-sizing: border-box;\n"
 "border: 1px solid rgba(151, 151, 151, 0.28);\n"
 "border-radius: 2px;\n"
 "background: rgb(0, 116, 253);\n"
@@ -637,6 +636,7 @@ class Ui_MainWindow(object):
         self.label_3.setObjectName(u"label_3")
         self.label_3.setGeometry(QRect(10, 3, 25, 24))
         self.label_3.setMinimumSize(QSize(24, 24))
+        # 修复 QGradient::setColorAt 报错：移除可能不兼容的渐变/错误属性
         self.label_3.setStyleSheet(u"image: url(:/login/imshezhi.png);")
         self.label_4 = QLabel(self.frame_6)
         self.label_4.setObjectName(u"label_4")
@@ -748,7 +748,7 @@ class Ui_MainWindow(object):
         self.home_left.setObjectName(u"home_left")
         self.home_left.setGeometry(QRect(0, 0, 72, 870))
         self.home_left.setMinimumSize(QSize(72, 870))
-        self.home_left.setStyleSheet(u"background: qlineargradient(x1: 0, y1: 0, x2: 1, y2: 1, stop: 0 rgb(0, 177, 255), stop: 1.0158 rgb(0, 116, 253));\n"
+        self.home_left.setStyleSheet(u"background: qlineargradient(x1: 0, y1: 0, x2: 1, y2: 1, stop: 0 rgb(0, 177, 255), stop: 1 rgb(0, 116, 253));\n"
 "border:none")
         self.home_left.setFrameShape(QFrame.Shape.StyledPanel)
         self.home_left.setFrameShadow(QFrame.Shadow.Raised)
