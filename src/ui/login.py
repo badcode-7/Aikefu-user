@@ -43,13 +43,15 @@ class Ui_LoginPage(object):
 "    spread:pad,\n"
 "    x1:0, y1:0,\n"
 "    x2:1, y2:1,\n"
-"	stop:0 rgba(52, 58, 64, 255),\n"
-"    stop:1 rgb(33, 37, 43)\n"
+"	stop:0 rgb(30, 30, 40),\n"
+"    stop:1 rgb(50, 50, 70)\n"
 "    \n"
 ");\n"
-"	background-color:rgb(33, 37, 43);\n"
+"	background-color:rgb(50, 50, 70);\n"
 "width:420px;\n"
 "height:520px;\n"
+"border-radius: 6px;\n"
+"border: 1px solid rgb(80, 80, 90);\n"
 "}")
         self.mainBox.setFrameShape(QFrame.Shape.StyledPanel)
         self.mainBox.setFrameShadow(QFrame.Shadow.Raised)
@@ -110,8 +112,8 @@ class Ui_LoginPage(object):
         self.frame_3.setGeometry(QRect(90, 220, 248, 41))
         self.frame_3.setMinimumSize(QSize(248, 41))
         self.frame_3.setMaximumSize(QSize(248, 41))
-        self.frame_3.setStyleSheet(u"border-radius: 4px;\n"
-"background: rgb(250, 171, 34);")
+        self.frame_3.setStyleSheet(u"border-radius: 6px;\n"
+"background: rgb(0, 150, 255);")
         self.frame_3.setFrameShape(QFrame.Shape.StyledPanel)
         self.frame_3.setFrameShadow(QFrame.Shadow.Raised)
         self.horizontalLayout_3 = QHBoxLayout(self.frame_3)
@@ -134,8 +136,9 @@ class Ui_LoginPage(object):
         font2.setFamilies([u"\u963f\u91cc\u5df4\u5df4\u666e\u60e0\u4f53 M"])
         self.username.setFont(font2)
         self.username.setCursor(QCursor(Qt.CursorShape.IBeamCursor))
-        self.username.setStyleSheet(u"background-color:rgb(250, 228, 101);\n"
-"padding-left:5px;")
+        self.username.setStyleSheet(u"background-color:rgb(255, 255, 255);\n"
+"padding-left:5px;\n"
+"border-radius: 4px;")
 
         self.horizontalLayout_3.addWidget(self.username)
 
@@ -144,8 +147,8 @@ class Ui_LoginPage(object):
         self.frame_4.setGeometry(QRect(90, 290, 248, 41))
         self.frame_4.setMinimumSize(QSize(248, 41))
         self.frame_4.setMaximumSize(QSize(248, 41))
-        self.frame_4.setStyleSheet(u"border-radius: 4px;\n"
-"background: rgb(250, 171, 34);")
+        self.frame_4.setStyleSheet(u"border-radius: 6px;\n"
+"background: rgb(0, 150, 255);")
         self.frame_4.setFrameShape(QFrame.Shape.StyledPanel)
         self.frame_4.setFrameShadow(QFrame.Shadow.Raised)
         self.horizontalLayout_4 = QHBoxLayout(self.frame_4)
@@ -166,8 +169,9 @@ class Ui_LoginPage(object):
         self.password.setMinimumSize(QSize(200, 35))
         self.password.setMaximumSize(QSize(210, 35))
         self.password.setFont(font2)
-        self.password.setStyleSheet(u"background-color:rgb(250, 228, 101);\n"
-"padding-left:5px;")
+        self.password.setStyleSheet(u"background-color:rgb(255, 255, 255);\n"
+"padding-left:5px;\n"
+"border-radius: 4px;")
         self.password.setEchoMode(QLineEdit.EchoMode.Password)
         self.password.setCursorPosition(0)
 
@@ -255,15 +259,14 @@ class Ui_LoginPage(object):
         self.loginBut.setGeometry(QRect(90, 420, 248, 41))
         self.loginBut.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
         self.loginBut.setStyleSheet(u"#loginBut{\n"
-"background-color: rgb(250, 173, 20);\n"
-"border-radius: 7px;\n"
-"border-bottom:4px solid rgb(208, 141, 16);\n"
+"background-color: rgb(0, 150, 255);\n"
+"border-radius: 6px;\n"
+"color: white;\n"
+"font-weight: bold;\n"
 "}\n"
 "#loginBut:hover{\n"
-"background-color:rgb(250, 173, 20);\n"
-"border-bottom:0px solid rgb(208, 141, 16);\n"
-"}\n"
-"")
+"background-color: rgb(0, 130, 235);\n"
+"}")
         icon1 = QIcon()
         icon1.addFile(u":/login/denglu.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
         self.loginBut.setIcon(icon1)
@@ -344,8 +347,8 @@ class Ui_LoginPage(object):
     # setupUi
 
     def retranslateUi(self, LoginPage):
-        LoginPage.setWindowTitle(QCoreApplication.translate("LoginPage", u"\u58f3\u6797\u667a\u80fd\u5ba2\u670d", None))
-        self.loginTitle.setText(QCoreApplication.translate("LoginPage", u"\u58f3\u6797\u667a\u80fd\u5ba2\u670d", None))
+        LoginPage.setWindowTitle(QCoreApplication.translate("LoginPage", u"\u79d1\u667aAI\u5ba2\u670d", None))
+        self.loginTitle.setText(QCoreApplication.translate("LoginPage", u"\u79d1\u667aAI\u5ba2\u670d", None))
         self.label_2.setText("")
         self.username.setInputMask("")
         self.username.setPlaceholderText(QCoreApplication.translate("LoginPage", u"\u8bf7\u8f93\u5165\u8d26\u53f7", None))
@@ -360,4 +363,3 @@ class Ui_LoginPage(object):
         self.pushButton_4.setText(QCoreApplication.translate("LoginPage", u"\u5fd8\u8bb0\u5bc6\u7801", None))
         self.label_4.setText(QCoreApplication.translate("LoginPage", u"20240824.A.52.9", None))
     # retranslateUi
-

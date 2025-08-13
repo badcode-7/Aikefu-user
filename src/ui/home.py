@@ -48,13 +48,15 @@ class Ui_MainWindow(object):
         self.home_right.setGeometry(QRect(70, 0, 410, 868))
         self.home_right.setToolTipDuration(0)
         self.home_right.setStyleSheet(u"border:none;\n"
-"background-color: rgb(248, 248, 248);")
+"background-color: rgb(240, 242, 245);\n"
+"border-left: 1px solid rgb(220, 220, 220);")
         self.home_right.setFrameShape(QFrame.Shape.StyledPanel)
         self.home_right.setFrameShadow(QFrame.Shadow.Raised)
         self.home_right_top = QFrame(self.home_right)
         self.home_right_top.setObjectName(u"home_right_top")
         self.home_right_top.setGeometry(QRect(0, 0, 410, 40))
-        self.home_right_top.setStyleSheet(u"background-color:rgb(255, 255, 255);")
+        self.home_right_top.setStyleSheet(u"background-color: rgb(50, 50, 70);\n"
+"border-bottom: 1px solid rgb(80, 80, 90);")
         self.home_right_top.setFrameShape(QFrame.Shape.StyledPanel)
         self.home_right_top.setFrameShadow(QFrame.Shadow.Raised)
         self.home_top_title = QLabel(self.home_right_top)
@@ -66,7 +68,8 @@ class Ui_MainWindow(object):
         self.home_top_title.setFont(font)
         self.home_top_title.setCursor(QCursor(Qt.CursorShape.ArrowCursor))
         self.home_top_title.setMouseTracking(True)
-        self.home_top_title.setStyleSheet(u"color: rgb(0, 0, 0);")
+        self.home_top_title.setStyleSheet(u"color: rgb(255, 255, 255);\n"
+"font-size: 14px;")
         self.home_top_title.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.top_right = QFrame(self.home_right_top)
         self.top_right.setObjectName(u"top_right")
@@ -150,7 +153,8 @@ class Ui_MainWindow(object):
         self.tableWidget.setMaximumSize(QSize(390, 800))
         self.tableWidget.setFont(font1)
         self.tableWidget.setStyleSheet(u"background-color: rgb(255, 255, 255);\n"
-"border-radius: 3px;")
+"border-radius: 5px;\n"
+"border: 1px solid rgb(220, 220, 220);")
         self.tableWidget.setColumnCount(2)
         self.tableWidget.horizontalHeader().setDefaultSectionSize(190)
         self.tableWidget.verticalHeader().setVisible(False)
@@ -161,12 +165,15 @@ class Ui_MainWindow(object):
         self.textEdit.setMaximumSize(QSize(390, 180))
         self.textEdit.setFont(font1)
         self.textEdit.setStyleSheet(u"background-color: rgb(255, 255, 255);\n"
-"border-radius: 3px;")
+"border-radius: 5px;\n"
+"border: 1px solid rgb(220, 220, 220);\n"
+"padding: 5px;")
         self.textEdit.setReadOnly(True)
         self.frame_3 = QFrame(self.frame_2)
         self.frame_3.setObjectName(u"frame_3")
         self.frame_3.setGeometry(QRect(0, 775, 410, 55))
-        self.frame_3.setStyleSheet(u"background: rgb(237, 240, 249);")
+        self.frame_3.setStyleSheet(u"background: rgb(50, 50, 70);\n"
+"border-top: 1px solid rgb(80, 80, 90);")
         self.frame_3.setFrameShape(QFrame.Shape.StyledPanel)
         self.frame_3.setFrameShadow(QFrame.Shadow.Raised)
         self.horizontalLayout = QHBoxLayout(self.frame_3)
@@ -216,7 +223,11 @@ class Ui_MainWindow(object):
         self.pushKeyword.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
         self.pushKeyword.setStyleSheet(u"color:#ffffff;\n"
 "border-radius: 4px;\n"
-"background: rgb(255, 104, 52);")
+"background: rgb(0, 150, 255);\n"
+"border: none;\n"
+"padding: 5px 10px;\n"
+"font-weight: bold;\n"
+"font-size: 12px;")
 
         self.horizontalLayout.addWidget(self.pushKeyword)
 
@@ -280,7 +291,8 @@ class Ui_MainWindow(object):
         self.frame_9 = QFrame(self.page_2)
         self.frame_9.setObjectName(u"frame_9")
         self.frame_9.setGeometry(QRect(0, 780, 410, 50))
-        self.frame_9.setStyleSheet(u"background: rgb(237, 240, 249);")
+        self.frame_9.setStyleSheet(u"background: rgb(50, 50, 70);\n"
+"border-top: 1px solid rgb(80, 80, 90);")
         self.frame_9.setFrameShape(QFrame.Shape.StyledPanel)
         self.frame_9.setFrameShadow(QFrame.Shadow.Raised)
         self.horizontalLayout_3 = QHBoxLayout(self.frame_9)
@@ -321,7 +333,11 @@ class Ui_MainWindow(object):
         self.mgctianjia.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
         self.mgctianjia.setStyleSheet(u"color:#ffffff;\n"
 "border-radius: 4px;\n"
-"background: rgb(255, 104, 52);")
+"background: rgb(0, 150, 255);\n"
+"border: none;\n"
+"padding: 5px 10px;\n"
+"font-weight: bold;\n"
+"font-size: 12px;")
 
         self.horizontalLayout_3.addWidget(self.mgctianjia)
 
@@ -365,7 +381,11 @@ class Ui_MainWindow(object):
         self.newgoodsBut.setStyleSheet(u"#newgoodsBut{\n"
 "color:#ffffff;\n"
 "border-radius: 4px;\n"
-"background: rgb(255, 104, 52);\n"
+"background: rgb(0, 150, 255);\n"
+"border: none;\n"
+"padding: 5px 10px;\n"
+"font-weight: bold;\n"
+"font-size: 12px;\n"
 "}\n"
 "")
         self.refresh = QPushButton(self.page_3)
@@ -602,9 +622,13 @@ class Ui_MainWindow(object):
         self.updataBut.setFont(font5)
         self.updataBut.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
         self.updataBut.setStyleSheet(u"#updataBut{\n"
-"background-color: rgb(255, 104, 52);\n"
+"background-color: rgb(0, 150, 255);\n"
 "border-radius: 7px;\n"
-"	color: rgb(255, 255, 255);\n"
+"color: rgb(255, 255, 255);\n"
+"border: none;\n"
+"padding: 5px 10px;\n"
+"font-weight: bold;\n"
+"font-size: 12px;\n"
 "}")
 
         self.horizontalLayout_8.addWidget(self.updataBut)
@@ -748,8 +772,9 @@ class Ui_MainWindow(object):
         self.home_left.setObjectName(u"home_left")
         self.home_left.setGeometry(QRect(0, 0, 72, 870))
         self.home_left.setMinimumSize(QSize(72, 870))
-        self.home_left.setStyleSheet(u"background: qlineargradient(x1: 0, y1: 0, x2: 1, y2: 1, stop: 0 rgb(0, 177, 255), stop: 1 rgb(0, 116, 253));\n"
-"border:none")
+        self.home_left.setStyleSheet(u"background: qlineargradient(x1: 0, y1: 0, x2: 1, y2: 1, stop: 0 rgb(30, 30, 40), stop: 1 rgb(50, 50, 70));\n"
+"border:none;\n"
+"border-right: 1px solid rgb(80, 80, 90);")
         self.home_left.setFrameShape(QFrame.Shape.StyledPanel)
         self.home_left.setFrameShadow(QFrame.Shadow.Raised)
         self.home_left.setLineWidth(0)
@@ -761,7 +786,8 @@ class Ui_MainWindow(object):
         self.munu.setObjectName(u"munu")
         self.munu.setGeometry(QRect(7, 110, 58, 311))
         self.munu.setStyleSheet(u"QPushButton:hover {\n"
-"	background-image: url(:/icon/icon/\u9009\u4e2d\u5706.png);\n"
+"	background-color: rgba(255, 255, 255, 0.1);\n"
+"	border-radius: 5px;\n"
 "}")
         self.verticalLayout_2 = QVBoxLayout(self.munu)
         self.verticalLayout_2.setSpacing(0)
@@ -896,4 +922,3 @@ class Ui_MainWindow(object):
         self.my_but.setText("")
         self.logo.setText("")
     # retranslateUi
-

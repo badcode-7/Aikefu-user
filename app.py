@@ -167,10 +167,10 @@ class LoginWindow(QMainWindow):
             self.show_error_message("用户名和密码不能为空！")
             return
 
-        # 你的 FastAPI：/login 接收 JSON，返回 {access_token, token_type}
+        # 修改为调用/aikefu/login端点
         try:
             r = requests.post(
-                f"{AUTH_BASE}/login",
+                f"{AUTH_BASE}/aikefu/login",  # 修改这里
                 json={"username": username, "password": password},
                 timeout=8,
             )
@@ -178,7 +178,18 @@ class LoginWindow(QMainWindow):
             self.show_error_message(f"登录请求失败：{e}")
             return
 
-        if r.status_code != 200:
+        # 以下保持原样（已处理VIP错误）
+        if r.status_code == 401:
+            try:
+                error_detail = r.json().get("detail", "")
+                if "非VIP用户" in error_detail:
+                    self.show_error_message("非VIP用户无法登录，请升级VIP会员")
+                else:
+                    self.show_error_message("登录失败，请检查用户名或密码")
+            except:
+                self.show_error_message("登录失败，请检查用户名或密码")
+            return
+        elif r.status_code != 200:
             self.show_error_message("登录失败，请检查用户名或密码")
             return
 
@@ -188,13 +199,7 @@ class LoginWindow(QMainWindow):
             self.show_error_message("登录失败：未返回 access_token")
             return
 
-        # # 持久化（原表结构第 12 列 self.system_info[11] 放 token）
-        # if self.ui.checkBox.isChecked() or self.ui.checkBox_2.isChecked():
-        #     self.db.update_system_info(account=username)
-        #     self.db.update_system_info(password=password)
-        # self.db.update_system_info(token=access_token)
-
-        # 拉取当前用户（/users/me）
+        # 获取用户信息
         try:
             me = requests.get(
                 f"{AUTH_BASE}/users/me",
@@ -204,10 +209,10 @@ class LoginWindow(QMainWindow):
         except Exception:
             me = {"username": username, "email": ""}
 
-        # 你的老逻辑依赖 userinfo['vip'] 判断，这里先全部放行
         self.homewin = HomeWindow()
         self.homewin.show()
         self.close()
+
 
     def show_error_message(self, message):
         # 显示错误消息
@@ -607,7 +612,7 @@ class HomeWindow(QMainWindow):
     def munuBut(self, index):
         self.ui.stackedWidget.setCurrentIndex(index)
         if index == 0:
-            # self.ui.home_top_title.setText("壳林智能客服")
+            # self.ui.home_top_title.setText("科智智能客服")
             self.reset_menu_style()
             self.ui.home_but.setStyleSheet("background-image: url(:/icon/icon/选中圆.png);image: url(:/icon/icon/首页.png);")
         elif index == 1:
