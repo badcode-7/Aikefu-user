@@ -36,9 +36,7 @@ class Message:
         )
 
         # 匹配度（关键词容忍阈值）
-        with open('./config.json', 'r', encoding='utf-8') as f:
-            cfg = json.load(f)
-        self.pipeidu = cfg.get('pipeidu', 75)
+        self.pipeidu = 75
 
         # 本地向量检索器（离线加载）
         # 模型维度按你的模型改：bge-small-zh-v1.5 是 768 维

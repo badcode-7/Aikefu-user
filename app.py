@@ -12,6 +12,17 @@ from flask import Flask, send_file, request, jsonify
 from flask_sslify import SSLify
 from threading import Lock, Thread
 from pathlib import Path
+import sys
+import os
+
+def get_resource_path(relative_path):
+    """获取打包后资源的绝对路径"""
+    try:
+        base_path = sys._MEIPASS  # PyInstaller创建的临时文件夹
+    except AttributeError:
+        base_path = os.path.abspath(".")  # 开发环境
+    
+    return os.path.join(base_path, relative_path)
 
 from src.ui.home import Ui_MainWindow
 from src.ui.login import Ui_LoginPage
@@ -262,8 +273,7 @@ class FlaskApp:
         self.ui = Ui_MainWindow()
         @self.app.route("/imsupport")
         def inject_js():
-            js_resource_path = os.path.join(
-                self.run_dir, "./src/plugins/kelin.js")
+            js_resource_path = get_resource_path("src/plugins/kelin.js")
             return send_file(js_resource_path, mimetype='application/javascript')
 
     def modify_hosts(self):
@@ -302,8 +312,8 @@ class FlaskApp:
     def init_message_listener(self):
         with self.lock:
             self.modify_hosts()
-            cert_file = os.path.join(self.run_dir, "./src/plugins/server.crt")
-            key_file = os.path.join(self.run_dir, "./src/plugins/server.key")
+            cert_file = get_resource_path("src/plugins/server.crt")
+            key_file = get_resource_path("src/plugins/server.key")
             print(key_file, 61)
             if not os.path.exists(cert_file) or not os.path.exists(key_file):
                 # 输出错误信息
@@ -399,9 +409,7 @@ class HomeWindow(QMainWindow):
         self.append_log_message(f"登录成功")
 
         # 获取config.json文件中的配置信息
-        with open('config.json', 'r') as f:
-            config = json.load(f)
-        self.pipeidu = config["pipeidu"]
+        self.pipeidu = 57
         # 设置匹配度
         self.ui.pipeidu.setValue(self.pipeidu)
         # 绑定滑动事件
@@ -595,8 +603,6 @@ class HomeWindow(QMainWindow):
     def on_slider_moved(self, event):
         value = self.ui.pipeidu.value()
         # 将值传递给config.json文件
-        with open('config.json', 'w') as f:
-            json.dump({'pipeidu': value}, f)
         self.pipeidu = value
 
     def extract_keys(self, keyword_list):

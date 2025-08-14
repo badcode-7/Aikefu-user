@@ -1,7 +1,17 @@
 # build_index_once.py
 import glob
 import os
+import sys
 from retriever import LocalRetriever
+
+def get_resource_path(relative_path):
+    """获取打包后资源的绝对路径"""
+    try:
+        base_path = sys._MEIPASS  # PyInstaller创建的临时文件夹
+    except AttributeError:
+        base_path = os.path.abspath(".")  # 开发环境
+    
+    return os.path.join(base_path, relative_path)
 
 def split_text(s: str, max_len=300):
     buf, out = "", []
@@ -24,10 +34,9 @@ def load_kb(kb_dir: str):
     return texts
 
 if __name__ == "__main__":
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-    kb_dir = os.path.join(script_dir, "knowledge_data")
-    model_dir = os.path.join(script_dir, "models", "bge-small-zh-v1.5")
-    index_dir = os.path.join(script_dir, "rag_index")
+    kb_dir = get_resource_path("src/knowledge_data")
+    model_dir = get_resource_path("src/models/bge-small-zh-v1.5") 
+    index_dir = get_resource_path("src/rag_index")
     
     texts = load_kb(kb_dir)
     r = LocalRetriever(model_dir=model_dir,
