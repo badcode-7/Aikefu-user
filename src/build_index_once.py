@@ -1,5 +1,6 @@
 # build_index_once.py
-import glob, os
+import glob
+import os
 from retriever import LocalRetriever
 
 def split_text(s: str, max_len=300):
@@ -23,9 +24,14 @@ def load_kb(kb_dir: str):
     return texts
 
 if __name__ == "__main__":
-    texts = load_kb("./knowledge_data")
-    r = LocalRetriever(model_dir="./models/bge-small-zh-v1.5",
-                       index_dir="./rag_index",
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    kb_dir = os.path.join(script_dir, "knowledge_data")
+    model_dir = os.path.join(script_dir, "models", "bge-small-zh-v1.5")
+    index_dir = os.path.join(script_dir, "rag_index")
+    
+    texts = load_kb(kb_dir)
+    r = LocalRetriever(model_dir=model_dir,
+                       index_dir=index_dir,
                        dim=768)  # bge-small-zh 是 768 维
     r.build_from_texts(texts)
     print("索引构建完成，段落数：", len(texts))

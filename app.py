@@ -40,6 +40,8 @@ import win32gui
 import win32con
 import win32api
 import win32process
+import shutil
+import subprocess
 
 task_queue = queue.Queue()
 flask_app = None
@@ -361,12 +363,14 @@ class HomeWindow(QMainWindow):
         # 隐藏/禁用未实现功能按钮
         self.ui.massg_but.setEnabled(False)      # 敏感词管理
         self.ui.keyword_but.setEnabled(False)    # 关键词管理
-        self.ui.setup_but.setEnabled(False)      # 系统设置中对接外部的部分
         self.ui.my_but.setEnabled(False)
         self.ui.refresh.setEnabled(False)
         self.ui.newgoodsBut.setEnabled(False)
         self.ui.modify.setEnabled(False)
         self.ui.about.setEnabled(False)
+        
+        # 启用系统设置按钮并绑定知识库功能
+        self.ui.setup_but.clicked.connect(lambda: self.ui.stackedWidget.setCurrentIndex(3))
         # 列表清空并给出占位提示
         self.ui.listView.setEnabled(False)
         self.ui.listView2.setEnabled(False)
@@ -416,6 +420,11 @@ class HomeWindow(QMainWindow):
         loop_task.start()
         self.ui.btn_diagnose = QPushButton("运行诊断")
         self.ui.btn_diagnose.clicked.connect(self.run_diagnosis)
+        
+        # 添加知识库管理功能
+        self.ui.add_kb_btn.clicked.connect(self.add_knowledge_file)
+        self.ui.rebuild_index_btn.clicked.connect(self.rebuild_knowledge_index)
+        
         # 注入结束
         # 监听websocket服务
         self.dispatcher.message_received.connect(self.on_message_received)
@@ -1223,6 +1232,68 @@ class HomeWindow(QMainWindow):
     # 输出添加首页日志
     def append_log_message(self, message):
         self.ui.textEdit.append(f"{message}")
+
+    def add_knowledge_file(self):
+        """添加知识库文件"""
+        from PySide6.QtWidgets import QFileDialog, QMessageBox
+        
+        # 打开文件选择对话框
+        file_path, _ = QFileDialog.getOpenFileName(
+            self, "选择知识库文件", "", 
+            "文本文件 (*.txt *.md);;所有文件 (*)"
+        )
+        
+        if not file_path:
+            return
+            
+        try:
+            # 获取目标路径
+            kb_dir = os.path.join(os.path.dirname(__file__), "src/knowledge_data")
+            os.makedirs(kb_dir, exist_ok=True)
+            
+            # 复制文件
+            filename = os.path.basename(file_path)
+            dest_path = os.path.join(kb_dir, filename)
+            shutil.copy2(file_path, dest_path)
+            
+            self.append_log_message(f"成功添加知识库文件: {filename}")
+            QMessageBox.information(self, "成功", f"已添加文件: {filename}")
+        except Exception as e:
+            self.append_log_message(f"添加知识库文件失败: {str(e)}")
+            QMessageBox.critical(self, "错误", f"添加文件失败: {str(e)}")
+
+    def rebuild_knowledge_index(self):
+        """重建知识库索引"""
+        from PySide6.QtWidgets import QMessageBox
+        
+        try:
+            # 获取脚本路径
+            script_path = os.path.join(
+                os.path.dirname(__file__), 
+                "src/build_index_once.py"
+            )
+            
+            # 确保目录存在
+            os.makedirs(os.path.join(os.path.dirname(__file__), "src/rag_index"), exist_ok=True)
+            
+            # 执行脚本
+            result = subprocess.run(
+                ["python", script_path], 
+                check=True,
+                capture_output=True,
+                text=True
+            )
+            
+            self.append_log_message("知识库索引重建成功")
+            self.append_log_message(result.stdout)
+            QMessageBox.information(self, "成功", "知识库索引已重建")
+        except subprocess.CalledProcessError as e:
+            error_msg = f"{e.stderr}\nExit code: {e.returncode}"
+            self.append_log_message(f"重建索引失败: {error_msg}")
+            QMessageBox.critical(self, "错误", f"重建索引失败: {error_msg}")
+        except Exception as e:
+            self.append_log_message(f"重建索引时发生错误: {str(e)}")
+            QMessageBox.critical(self, "错误", f"重建索引时发生错误: {str(e)}")
 
     # 页面拖动方法
     def mousePressEvent(self, event):

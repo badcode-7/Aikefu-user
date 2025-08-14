@@ -671,6 +671,99 @@ class Ui_MainWindow(object):
         self.label_5.setGeometry(QRect(10, 304, 21, 21))
         self.label_5.setStyleSheet(u"image: url(:/login/tongyong.png);")
 
+        # 知识库管理部分
+        self.kb_label = QLabel(self.frame_6)
+        self.kb_label.setObjectName(u"kb_label")
+        self.kb_label.setGeometry(QRect(10, 520, 21, 21))
+        self.kb_label.setStyleSheet(u"image: url(:/login/rengongzhineng.png);")
+        
+        self.kb_label_title = QLabel(self.frame_6)
+        self.kb_label_title.setObjectName(u"kb_label_title")
+        self.kb_label_title.setGeometry(QRect(40, 520, 84, 22))
+        font_kb = QFont()
+        font_kb.setFamilies([u"\u963f\u91cc\u5df4\u5df4\u666e\u60e0\u4f53 M"])
+        font_kb.setPointSize(10)
+        self.kb_label_title.setFont(font_kb)
+        self.kb_label_title.setText(u"知识库管理")
+
+        self.add_kb_btn = QPushButton(self.frame_6)
+        self.add_kb_btn.setObjectName(u"add_kb_btn")
+        self.add_kb_btn.setGeometry(QRect(10, 550, 180, 32))
+        self.add_kb_btn.setStyleSheet(u"""
+            QPushButton {
+                background-color: rgb(0, 150, 255);
+                border-radius: 4px;
+                color: white;
+                padding: 5px;
+            }
+            QPushButton:hover {
+                background-color: rgb(0, 130, 220);
+            }
+        """)
+        self.add_kb_btn.setText(u"添加知识库文件")
+
+        self.rebuild_index_btn = QPushButton(self.frame_6)
+        self.rebuild_index_btn.setObjectName(u"rebuild_index_btn")
+        self.rebuild_index_btn.setGeometry(QRect(210, 550, 180, 32))
+        self.rebuild_index_btn.setStyleSheet(u"""
+            QPushButton {
+                background-color: rgb(0, 150, 255);
+                border-radius: 4px;
+                color: white;
+                padding: 5px;
+            }
+            QPushButton:hover {
+                background-color: rgb(0, 130, 220);
+            }
+        """)
+        self.rebuild_index_btn.setText(u"重建知识库索引")
+
+        # 知识库管理按钮
+        self.kb_label = QLabel(self.frame_6)
+        self.kb_label.setObjectName(u"kb_label")
+        self.kb_label.setGeometry(QRect(10, 520, 21, 21))
+        self.kb_label.setStyleSheet(u"image: url(:/login/rengongzhineng.png);")
+        self.kb_label_title = QLabel(self.frame_6)
+        self.kb_label_title.setObjectName(u"kb_label_title")
+        self.kb_label_title.setGeometry(QRect(40, 520, 84, 22))
+        font_kb = QFont()
+        font_kb.setFamilies([u"\u963f\u91cc\u5df4\u5df4\u666e\u60e0\u4f53 M"])
+        font_kb.setPointSize(10)
+        self.kb_label_title.setFont(font_kb)
+        self.kb_label_title.setText(u"知识库管理")
+
+        self.add_kb_btn = QPushButton(self.frame_6)
+        self.add_kb_btn.setObjectName(u"add_kb_btn")
+        self.add_kb_btn.setGeometry(QRect(10, 550, 180, 32))
+        self.add_kb_btn.setStyleSheet(u"""
+            QPushButton {
+                background-color: rgb(0, 150, 255);
+                border-radius: 4px;
+                color: white;
+                padding: 5px;
+            }
+            QPushButton:hover {
+                background-color: rgb(0, 130, 220);
+            }
+        """)
+        self.add_kb_btn.setText(u"添加知识库文件")
+
+        self.rebuild_index_btn = QPushButton(self.frame_6)
+        self.rebuild_index_btn.setObjectName(u"rebuild_index_btn")
+        self.rebuild_index_btn.setGeometry(QRect(210, 550, 180, 32))
+        self.rebuild_index_btn.setStyleSheet(u"""
+            QPushButton {
+                background-color: rgb(0, 150, 255);
+                border-radius: 4px;
+                color: white;
+                padding: 5px;
+            }
+            QPushButton:hover {
+                background-color: rgb(0, 130, 220);
+            }
+        """)
+        self.rebuild_index_btn.setText(u"重建知识库索引")
+
         self.horizontalLayout_9.addWidget(self.frame_6)
 
 
