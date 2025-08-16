@@ -8,7 +8,7 @@ import json
 from typing import List, Tuple, Optional, Dict
 
 from thefuzz import process, fuzz
-from .retriever import LocalRetriever  # 本地向量检索
+# from .retriever import LocalRetriever  # 本地向量检索（去掉）
 # from zhipuai import ZhipuAI  # 如果你要切到智谱，可以自己替换 _call_llm
 # message.py
 DEBUG = True

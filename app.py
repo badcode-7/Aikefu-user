@@ -431,7 +431,7 @@ class HomeWindow(QMainWindow):
         self.ui.btn_diagnose.clicked.connect(self.run_diagnosis)
         
         # 添加知识库管理功能
-        self.ui.add_kb_btn.clicked.connect(self.add_knowledge_file_to_engine_dir)
+        self.ui.add_kb_btn.clicked.connect(self.add_knowledge_file)
         self.ui.rebuild_index_btn.clicked.connect(self.rebuild_knowledge_index)
         
         # 注入结束
@@ -489,6 +489,7 @@ class HomeWindow(QMainWindow):
         self.test_server_thread = None
         # —— 知识库服务集成 START ——
         self.kb_client = KBClient(base_url="http://127.0.0.1:38999")
+        self.kb = self.kb_client
         self.kb_mgr = KBServiceManager(self.kb_client, log_fn=self.append_log_message)
 
         # 异步启动，不阻塞 UI
@@ -505,8 +506,28 @@ class HomeWindow(QMainWindow):
             QtCore.QTimer.singleShot(1000, _poll_kb_ready)
         QtCore.QTimer.singleShot(1000, _poll_kb_ready)
         # —— 知识库服务集成 END ——
+        self._ensure_kb()
 
         # 已在 QApplication 创建前设置 DPI 策略
+    # 顶部：确保已导入
+    from kb_client import KBClient, KBServiceManager
+
+    def _ensure_kb(self):
+        """确保 kb_client / kb_mgr 已初始化，并启动本地引擎"""
+        if not hasattr(self, "kb_client") or self.kb_client is None:
+            # 按你的端口/地址改
+            self.kb_client = KBClient(base_url="http://127.0.0.1:38999")
+            self.kb_mgr = KBServiceManager(self.kb_client, log_fn=self.append_log_message)
+            self.kb_mgr.start_async()  # 后台启动引擎，不阻塞 UI
+
+            # 兼容老代码如果还有 self.kb.xxx 的调用：
+            self.kb = self.kb_client
+
+            # 非阻塞健康检查提示（可选）
+            QtCore.QTimer.singleShot(1500, lambda: self.append_log_message(
+                f"KB健康：{self.kb_client.health()}"
+            ))
+
     def check_js_environment(self):
             """检查JS执行环境"""
             try:
@@ -1257,12 +1278,84 @@ class HomeWindow(QMainWindow):
     # 输出添加首页日志
     def append_log_message(self, message):
         self.ui.textEdit.append(f"{message}")
+    # 放进 HomeWindow 类里（与其它方法同级）
+    def _ensure_kb(self):
+        if not hasattr(self, "kb_client") or self.kb_client is None:
+            self.kb_client = KBClient(base_url="http://127.0.0.1:38999")
+
+            # 开发态：不拉起 exe；只创建 client
+            self.kb_mgr = None
+
+            # 兼容旧代码
+            self.kb = self.kb_client
+
+            # 可选：提示健康状态
+            QtCore.QTimer.singleShot(1500, lambda: self.append_log_message(
+                f"KB健康：{self.kb_client.health()}"
+            ))
+
+
+    def rebuild_knowledge_index(self):
+        """点击按钮 → 触发 KB 引擎构建（有变化才重建）"""
+        from PySide6.QtWidgets import QMessageBox
+        self._ensure_kb()
+        try:
+            resp = self.kb_client.build(kb_dir=None, force_full=False)
+            self.append_log_message(f"知识库索引：{resp}")
+            QMessageBox.information(self, "成功",
+                                    f"索引{resp.get('msg')}，片段数：{resp.get('size')}")
+        except Exception as e:
+            self.append_log_message(f"/build 调用失败：{e}")
+            QMessageBox.critical(self, "错误", f"/build 调用失败：{e}")
+
+    def add_knowledge_file(self):
+        """选择文本文件 → 读取内容 → 直接发送到 KB 服务保存并索引（无需知道磁盘目录）"""
+        from PySide6.QtWidgets import QFileDialog, QMessageBox
+        import os
+
+        self._ensure_kb()
+        paths, _ = QFileDialog.getOpenFileNames(
+            self, "选择知识库文件", "", "文本文件 (*.txt *.md);;所有文件 (*)"
+        )
+        if not paths:
+            return
+
+        ok, fail = 0, 0
+        for p in paths:
+            try:
+                # 读文件（含 GBK 兜底）
+                try:
+                    with open(p, "r", encoding="utf-8") as f:
+                        content = f.read()
+                except UnicodeDecodeError:
+                    with open(p, "r", encoding="gb18030", errors="ignore") as f:
+                        content = f.read()
+
+                # 发送给服务端保存并索引；rebuild=False=快速追加
+                resp = self.kb_client.add_file(filename=os.path.basename(p),
+                                            content=content,
+                                            rebuild=False)
+                mode = resp.get("mode")
+                if mode == "append":
+                    self.append_log_message(f"已追加：{os.path.basename(p)} → 新增 {resp.get('added')} 段 / 总 {resp.get('size')}")
+                else:
+                    self.append_log_message(f"已保存并重建：{os.path.basename(p)} → {resp}")
+                ok += 1
+            except Exception as e:
+                fail += 1
+                self.append_log_message(f"上传失败 {p}: {e}")
+
+        if ok:
+            QMessageBox.information(self, "成功", f"已处理 {ok} 个文件，失败 {fail} 个")
+        elif fail:
+            QMessageBox.critical(self, "错误", f"全部失败：{fail} 个")
+
 
     def add_knowledge_file_to_engine_dir(self):
         """把文件复制到 KB 引擎的 kb_dir，然后触发 /build（简化增量/全量重建）"""
         from PySide6.QtWidgets import QFileDialog, QMessageBox
         import os, shutil, sys
-
+        self._ensure_kb()
         # 1) 找到 kb_engine 根目录
         engine_dir = None
         try:
@@ -1359,6 +1452,11 @@ class HomeWindow(QMainWindow):
         if event:
             event.accept()
             super().closeEvent(event)
+        try:
+            if hasattr(self, "kb_mgr") and self.kb_mgr:
+                self.kb_mgr.stop()
+        except Exception as e:
+            print(f"关闭 KB 引擎失败: {e}")
 
 # 检测版本更新
 def check_for_updates():

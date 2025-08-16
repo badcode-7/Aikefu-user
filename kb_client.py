@@ -16,7 +16,12 @@ class KBClient:
     def __init__(self, base_url: str = DEFAULT_BASE, timeout: float = 6.0):
         self.base = base_url.rstrip("/")
         self.timeout = timeout
-
+    def add_file(self, filename: str, content: str, rebuild: bool = False):
+        payload = {"filename": filename, "content": content, "rebuild": rebuild}
+        r = requests.post(f"{self.base}/add_file", json=payload,
+                          timeout=max(self.timeout, 30), verify=False)
+        r.raise_for_status()
+        return r.json()
     def health(self):
         return requests.get(f"{self.base}/health", timeout=self.timeout, verify=False).json()
 
