@@ -8,12 +8,18 @@ from PySide6.QtGui import QAction, QColor
 from src.WebSocketServer import WebSocketServer
 from src.MessageDispatcher import MessageDispatcher
 from src.Message import Message
+from src.knowledge_service.client import LocalRetrieverProxy
 from flask import Flask, send_file, request, jsonify
 from flask_sslify import SSLify
 from threading import Lock, Thread
 from pathlib import Path
 import sys
 import os
+import hnswlib
+import sys, os
+print("frozen:", getattr(sys, "frozen", False))
+print("_MEIPASS:", getattr(sys, "_MEIPASS", None))
+print("exe dir:", os.path.dirname(os.path.abspath(sys.executable)) if getattr(sys, "frozen", False) else "N/A")
 
 def get_resource_path(relative_path):
     """获取打包后资源的绝对路径"""
@@ -351,6 +357,13 @@ class HomeWindow(QMainWindow):
 
         self.minganciData = self.db.get_sensitive()                     # 获取敏感词列表
         self.minganciDatakv = self.extract_keys(self.minganciData)      # 提取敏感词列表
+        
+        # 初始化知识库客户端
+        self.knowledge_client = LocalRetrieverProxy(
+            model_dir="src/models/bge-small-zh-v1.5",
+            index_dir="src/rag_index",
+            dim=768
+        )
 
         self.goodsList = self.db.get_goodslist()                        # 获取商品列表
         # self.ui.username.setText(self.userinfo['nickname'])
@@ -1028,11 +1041,18 @@ class HomeWindow(QMainWindow):
         # 获取会话信息
         chatinfo = self.db.get_association(message_data)
         # 判断会话是否绑定商品
-        # 判断chatinfo['goodsinfo']是否纯在，如果存在，则赋值给goodsinfo变量
         if chatinfo and 'goodsinfo' in chatinfo:
             goodsinfo = chatinfo['goodsinfo']
         else:
             goodsinfo = None
+            
+        # 使用知识库客户端进行查询
+        query = message_data['originalData']['message']
+        results = self.knowledge_client.search(query, top_k=3)
+        knowledge_context = "\n".join([f"{text} (相似度: {score:.2f})" for text, score in results])
+        
+        # 将知识库上下文添加到消息数据中
+        message_data['knowledge_context'] = knowledge_context
 
         try:
             msg_type = message_data['originalData'].get('msgtype')
@@ -1056,7 +1076,10 @@ class HomeWindow(QMainWindow):
                 if msg_type == 'sysmsg':
                     return M.sysmessage()
                 elif msg_type == 'text':
-                    data = build_data(message=message_data['originalData']['message'])
+                    data = build_data(
+                        message=message_data['originalData']['message'],
+                        knowledge_context=message_data.get('knowledge_context', '')
+                    )
                     return M.textmessage(data)
                 elif msg_type == 'link':
                     urlinfo = json.loads(message_data['originalData']['urlinfo'])

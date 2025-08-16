@@ -2,7 +2,7 @@
 import glob
 import os
 import sys
-from retriever import LocalRetriever
+from .retriever import LocalRetriever
 
 def get_resource_path(relative_path):
     """获取打包后资源的绝对路径"""
@@ -34,9 +34,9 @@ def load_kb(kb_dir: str):
     return texts
 
 if __name__ == "__main__":
-    kb_dir = get_resource_path("src/knowledge_data")
-    model_dir = get_resource_path("src/models/bge-small-zh-v1.5") 
-    index_dir = get_resource_path("src/rag_index")
+    kb_dir = get_resource_path("src/knowledge_base/knowledge_data")
+    model_dir = get_resource_path("src/models/bge-small-zh-v1.5")
+    index_dir = get_resource_path("src/knowledge_base/rag_index")
     
     texts = load_kb(kb_dir)
     r = LocalRetriever(model_dir=model_dir,

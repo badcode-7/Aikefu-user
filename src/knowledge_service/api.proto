@@ -1,0 +1,51 @@
+syntax = "proto3";
+
+package knowledge_service;
+
+service KnowledgeService {
+  rpc BuildIndex (BuildIndexRequest) returns (BuildIndexResponse);
+  rpc BuildFromTexts (BuildFromTextsRequest) returns (BuildIndexResponse);
+  rpc Search (SearchRequest) returns (SearchResponse);
+  rpc GetStatus (StatusRequest) returns (StatusResponse);
+}
+
+message BuildIndexRequest {
+  string kb_dir = 1;
+  string model_dir = 2;
+  string index_dir = 3;
+}
+
+message BuildIndexResponse {
+  bool success = 1;
+  string message = 2;
+  int32 document_count = 3;
+}
+
+message SearchRequest {
+  string query = 1;
+  int32 top_k = 2;
+}
+
+message SearchResponse {
+  repeated Result results = 1;
+  
+  message Result {
+    string text = 1;
+    float score = 2;
+  }
+}
+
+message BuildFromTextsRequest {
+  repeated string texts = 1;
+  string model_dir = 2;
+  string index_dir = 3;
+  int32 ef_construction = 4;
+  int32 M = 5;
+}
+
+message StatusRequest {}
+
+message StatusResponse {
+  bool ready = 1;
+  string version = 2;
+}

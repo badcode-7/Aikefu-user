@@ -8,7 +8,7 @@ import json
 from typing import List, Tuple, Optional, Dict
 
 from thefuzz import process, fuzz
-from .retriever import LocalRetriever  # 本地向量检索
+from .knowledge_service.client import LocalRetrieverProxy  # 微服务客户端
 # from zhipuai import ZhipuAI  # 如果你要切到智谱，可以自己替换 _call_llm
 # message.py
 DEBUG = True
@@ -40,9 +40,9 @@ class Message:
 
         # 本地向量检索器（离线加载）
         # 模型维度按你的模型改：bge-small-zh-v1.5 是 768 维
-        self.retriever = LocalRetriever(
-            model_dir="src/models/bge-small-zh-v1.5",
-            index_dir="src/rag_index",
+        self.retriever = LocalRetrieverProxy(
+            model_dir="src/models/bge-small-zh-v1.5", 
+            index_dir="src/knowledge_base/rag_index",
             dim=768
         )
 
