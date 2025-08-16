@@ -1,4 +1,5 @@
 from data.database_manager import DatabaseManager
+from kb_client import KBClient, KBServiceManager
 
 from PySide6 import QtCore, QtGui
 from PySide6.QtCore import Qt, QModelIndex, Slot, QCoreApplication, QTimer
@@ -430,7 +431,7 @@ class HomeWindow(QMainWindow):
         self.ui.btn_diagnose.clicked.connect(self.run_diagnosis)
         
         # 添加知识库管理功能
-        self.ui.add_kb_btn.clicked.connect(self.add_knowledge_file)
+        self.ui.add_kb_btn.clicked.connect(self.add_knowledge_file_to_engine_dir)
         self.ui.rebuild_index_btn.clicked.connect(self.rebuild_knowledge_index)
         
         # 注入结束
@@ -486,6 +487,24 @@ class HomeWindow(QMainWindow):
         # 初始化浏览器窗口和测试服务器
         self.browser_window = None
         self.test_server_thread = None
+        # —— 知识库服务集成 START ——
+        self.kb_client = KBClient(base_url="http://127.0.0.1:38999")
+        self.kb_mgr = KBServiceManager(self.kb_client, log_fn=self.append_log_message)
+
+        # 异步启动，不阻塞 UI
+        self.kb_mgr.start_async()
+
+        # 可选：等就绪后提示（不阻塞）
+        def _poll_kb_ready():
+            try:
+                if self.kb_client.health().get("status") == "ok":
+                    self.append_log_message("知识库引擎已就绪")
+                    return
+            except Exception:
+                pass
+            QtCore.QTimer.singleShot(1000, _poll_kb_ready)
+        QtCore.QTimer.singleShot(1000, _poll_kb_ready)
+        # —— 知识库服务集成 END ——
 
         # 已在 QApplication 创建前设置 DPI 策略
     def check_js_environment(self):
@@ -1239,67 +1258,58 @@ class HomeWindow(QMainWindow):
     def append_log_message(self, message):
         self.ui.textEdit.append(f"{message}")
 
-    def add_knowledge_file(self):
-        """添加知识库文件"""
+    def add_knowledge_file_to_engine_dir(self):
+        """把文件复制到 KB 引擎的 kb_dir，然后触发 /build（简化增量/全量重建）"""
         from PySide6.QtWidgets import QFileDialog, QMessageBox
-        
-        # 打开文件选择对话框
-        file_path, _ = QFileDialog.getOpenFileName(
-            self, "选择知识库文件", "", 
-            "文本文件 (*.txt *.md);;所有文件 (*)"
-        )
-        
-        if not file_path:
-            return
-            
-        try:
-            # 获取目标路径
-            kb_dir = os.path.join(os.path.dirname(__file__), "src/knowledge_data")
-            os.makedirs(kb_dir, exist_ok=True)
-            
-            # 复制文件
-            filename = os.path.basename(file_path)
-            dest_path = os.path.join(kb_dir, filename)
-            shutil.copy2(file_path, dest_path)
-            
-            self.append_log_message(f"成功添加知识库文件: {filename}")
-            QMessageBox.information(self, "成功", f"已添加文件: {filename}")
-        except Exception as e:
-            self.append_log_message(f"添加知识库文件失败: {str(e)}")
-            QMessageBox.critical(self, "错误", f"添加文件失败: {str(e)}")
+        import os, shutil, sys
 
-    def rebuild_knowledge_index(self):
-        """重建知识库索引"""
-        from PySide6.QtWidgets import QMessageBox
-        
+        # 1) 找到 kb_engine 根目录
+        engine_dir = None
         try:
-            # 获取脚本路径
-            script_path = os.path.join(
-                os.path.dirname(__file__), 
-                "src/build_index_once.py"
-            )
-            
-            # 确保目录存在
-            os.makedirs(os.path.join(os.path.dirname(__file__), "src/rag_index"), exist_ok=True)
-            
-            # 执行脚本
-            result = subprocess.run(
-                ["python", script_path], 
-                check=True,
-                capture_output=True,
-                text=True
-            )
-            
-            self.append_log_message("知识库索引重建成功")
-            self.append_log_message(result.stdout)
-            QMessageBox.information(self, "成功", "知识库索引已重建")
-        except subprocess.CalledProcessError as e:
-            error_msg = f"{e.stderr}\nExit code: {e.returncode}"
-            self.append_log_message(f"重建索引失败: {error_msg}")
-            QMessageBox.critical(self, "错误", f"重建索引失败: {error_msg}")
+            # KBServiceManager 有 _find_engine；如果你不想用私有方法，可以在 kb_client 里加一个 get_engine_root()
+            exe, engine_cwd = self.kb_mgr._find_engine()  # 返回 (exe路径, 工作目录)
+            engine_dir = os.path.dirname(exe)
+        except Exception:
+            # 兜底：按发布布局推断
+            if getattr(sys, "frozen", False):
+                engine_dir = os.path.join(os.path.dirname(sys.executable), "kb_engine")
+            else:
+                engine_dir = os.path.abspath("kb_engine")
+
+        kb_dir = os.path.join(engine_dir, "resources", "knowledge_data")
+        os.makedirs(kb_dir, exist_ok=True)
+
+        # 2) 选择文件并拷贝
+        paths, _ = QFileDialog.getOpenFileNames(
+            self, "选择知识库文件", "", "文本文件 (*.txt *.md);;所有文件 (*)"
+        )
+        if not paths:
+            return
+
+        copied = 0
+        for p in paths:
+            try:
+                dst = os.path.join(kb_dir, os.path.basename(p))
+                shutil.copy2(p, dst)
+                copied += 1
+                self.append_log_message(f"已复制到引擎目录：{dst}")
+            except Exception as e:
+                self.append_log_message(f"复制失败 {p}: {e}")
+
+        if copied == 0:
+            QMessageBox.warning(self, "提示", "没有文件被复制")
+            return
+
+        # 3) 触发构建（服务会做“有变化才重建”的判断）
+        try:
+            resp = self.kb_client.build(kb_dir=None, force_full=False)
+            self.append_log_message(f"KB 构建：{resp}")
+            QMessageBox.information(self, "成功", f"索引{resp.get('msg')}，片段数：{resp.get('size')}")
         except Exception as e:
-            self.append_log_message(f"重建索引时发生错误: {str(e)}")
-            QMessageBox.critical(self, "错误", f"重建索引时发生错误: {str(e)}")
+            self.append_log_message(f"/build 调用失败：{e}")
+            QMessageBox.critical(self, "错误", f"构建失败：{e}")
+
+
 
     # 页面拖动方法
     def mousePressEvent(self, event):
