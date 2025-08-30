@@ -1030,7 +1030,7 @@ class HomeWindow(QMainWindow):
     # 处理消息
     def process_data(self, message_data):
         # 获取客户端ID
-        M = Message(self.db)
+        M = Message(self.db, self.ui, kb_client=self.kb_client)
         client_id = message_data['client_id']
         # 将消息内容从JSON字符串解析为字典
         message_data = json.loads(message_data['message'])
