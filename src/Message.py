@@ -201,6 +201,13 @@ class Message:
         kw_hit = self._match_keywords(msg, store_id=store_id)
         if kw_hit:
             reply = self.add_emoji(kw_hit)
+            
+            # 敏感词替换（关键词匹配的回复也需要过滤）
+            sensitive_words = self.db.get_sensitive()
+            sensitive_dict = {item['key']: item['value'] for item in sensitive_words}
+            for word, replacement in sensitive_dict.items():
+                reply = reply.replace(word, replacement)
+            
             self.local_save_chatlog(username, msg, reply, "关键词匹配")
             return reply
 
@@ -219,6 +226,14 @@ class Message:
         if not full_context:
             self.play_sound()
             ans_noctx = self._call_llm(msg, "", ccode)
+            
+            # 敏感词替换（无上下文兜底回复也需要过滤）
+            if ans_noctx is not None:
+                sensitive_words = self.db.get_sensitive()
+                sensitive_dict = {item['key']: item['value'] for item in sensitive_words}
+                for word, replacement in sensitive_dict.items():
+                    ans_noctx = ans_noctx.replace(word, replacement)
+            
             self.local_save_chatlog(username, msg, ans_noctx, "AI(无知识兜底)")
             if ccode:
                 Message.sessions.setdefault(ccode, []).extend([
@@ -242,6 +257,14 @@ class Message:
                 {"role": "user", "content": msg},
                 {"role": "assistant", "content": ans},
             ])
+        
+        # 敏感词替换
+        if ans is not None:
+            sensitive_words = self.db.get_sensitive()
+            sensitive_dict = {item['key']: item['value'] for item in sensitive_words}
+            for word, replacement in sensitive_dict.items():
+                ans = ans.replace(word, replacement)
+        
         return ans
 
     # ====== 其它类型 ======

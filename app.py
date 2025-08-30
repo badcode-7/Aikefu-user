@@ -370,9 +370,11 @@ class HomeWindow(QMainWindow):
         self.ui.home.setGraphicsEffect(shadow)
         # 绑定按钮的点击事件
         # lambda:self.ui.stackedWidget.setCurrentIndex(0)
+        self.ui.mgctianjia.clicked.connect(self.add_new_sensitive)
         self.ui.home_but.clicked.connect(lambda: self.munuBut(0))
+        self.ui.massg_but.clicked.connect(lambda: self.munuBut(1))  # 敏感词管理
         # 隐藏/禁用未实现功能按钮
-        self.ui.massg_but.setEnabled(False)      # 敏感词管理
+        # self.ui.massg_but.setEnabled(False)      # 敏感词管理 - 已实现，启用
         self.ui.keyword_but.setEnabled(False)    # 关键词管理
         self.ui.my_but.setEnabled(False)
         self.ui.refresh.setEnabled(False)

@@ -1,4 +1,6 @@
 import sqlite3
+import json
+import os
 from contextlib import closing
 from PySide6.QtWidgets import QMessageBox,QWidget
 import requests
@@ -109,17 +111,62 @@ class DatabaseManager:
     def get_stoetkeywords(self, stortid):
         return []
 
+    def _load_sensitive_words(self):
+        """加载敏感词JSON文件"""
+        sensitive_file = 'data/sensitive_words.json'
+        if os.path.exists(sensitive_file):
+            try:
+                with open(sensitive_file, 'r', encoding='utf-8') as f:
+                    return json.load(f)
+            except (json.JSONDecodeError, FileNotFoundError):
+                return {}
+        return {}
+
+    def _save_sensitive_words(self, sensitive_words):
+        """保存敏感词到JSON文件"""
+        sensitive_file = 'data/sensitive_words.json'
+        os.makedirs(os.path.dirname(sensitive_file), exist_ok=True)
+        with open(sensitive_file, 'w', encoding='utf-8') as f:
+            json.dump(sensitive_words, f, ensure_ascii=False, indent=2)
+
     def get_sensitive(self):
-        return []
+        """获取所有敏感词"""
+        sensitive_words = self._load_sensitive_words()
+        return [{"id": i, "key": word, "value": replacement} 
+                for i, (word, replacement) in enumerate(sensitive_words.items())]
 
     def add_keyword(self, keyword, content, store_id=0, type=1):
+        # 敏感词添加逻辑
+        if type == 2:  # 敏感词类型
+            sensitive_words = self._load_sensitive_words()
+            sensitive_words[keyword] = content
+            self._save_sensitive_words(sensitive_words)
+            return {'id': len(sensitive_words) - 1, 'key': keyword, 'value': content, 'type': type}
         # 先本地假返回
         return {'id': -1, 'key': keyword, 'value': content, 'type': type}
 
     def update_keyword(self, keyword_id, keyword, content):
+        # 敏感词更新逻辑
+        sensitive_words = self._load_sensitive_words()
+        # 找到对应的敏感词并更新
+        for i, (word, replacement) in enumerate(sensitive_words.items()):
+            if i == keyword_id:
+                # 删除旧的，添加新的
+                del sensitive_words[word]
+                sensitive_words[keyword] = content
+                self._save_sensitive_words(sensitive_words)
+                return {'id': keyword_id, 'key': keyword, 'value': content}
         return {'id': keyword_id, 'key': keyword, 'value': content}
 
     def delete_keyword(self, keyword_id):
+        # 敏感词删除逻辑
+        sensitive_words = self._load_sensitive_words()
+        # 找到对应的敏感词并删除
+        for i, (word, replacement) in enumerate(list(sensitive_words.items())):
+            if i == keyword_id:
+                del sensitive_words[word]
+                self._save_sensitive_words(sensitive_words)
+                return True
         return True
 
     def get_userinfo(self, token):
@@ -140,4 +187,3 @@ class DatabaseManager:
     def update_goods(self, *args, **kwargs): return {"ok": False, "msg": "未实现"}
     def get_goodslist(self, type=1): return []
     def delete_goods(self, id): return True
-
