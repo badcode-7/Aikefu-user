@@ -372,7 +372,6 @@ class HomeWindow(QMainWindow):
         # lambda:self.ui.stackedWidget.setCurrentIndex(0)
         self.ui.home_but.clicked.connect(lambda: self.munuBut(0))
         # 隐藏/禁用未实现功能按钮
-        self.ui.massg_but.setEnabled(False)      # 敏感词管理
         self.ui.keyword_but.setEnabled(False)    # 关键词管理
         self.ui.my_but.setEnabled(False)
         self.ui.refresh.setEnabled(False)
@@ -380,6 +379,8 @@ class HomeWindow(QMainWindow):
         self.ui.modify.setEnabled(False)
         self.ui.about.setEnabled(False)
         
+        # 启用敏感词管理按钮并绑定页面切换
+        self.ui.massg_but.clicked.connect(lambda: self.munuBut(1))
         # 启用系统设置按钮并绑定知识库功能
         self.ui.setup_but.clicked.connect(lambda: self.ui.stackedWidget.setCurrentIndex(3))
         # 列表清空并给出占位提示
@@ -402,6 +403,9 @@ class HomeWindow(QMainWindow):
         self.minganciTable.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.minganciTable.customContextMenuRequested.connect(self.showContextMenuM)
         self.minganciTable.itemChanged.connect(self.minganci_changed)
+
+        # 绑定敏感词添加按钮
+        self.ui.mgctianjia.clicked.connect(self.add_new_sensitive)
 
         # 初始化系统设置
         # self.ui.tishici.setText(self.system_info[9])
