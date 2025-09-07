@@ -307,8 +307,51 @@ class Message:
         return reply
 
     def urllinkmessage(self, data: dict) -> Optional[str]:
-        self.play_sound()
-        return None
+        """处理纯链接消息（包含商品链接的情况）"""
+        try:
+            # 从原始数据中提取消息内容
+            message = data.get("originalData", {}).get("message", "")
+            if not message:
+                return None
+                
+            # 提取商品链接
+            product_urls = self._extract_product_urls(message)
+            if not product_urls:
+                self.play_sound()
+                return None
+                
+            # 获取知识库内容
+            product_knowledge = ""
+            for url in product_urls:
+                knowledge = self.db.get_knowledge_by_url(url)
+                if knowledge:
+                    product_knowledge += f"\n\n【商品链接知识库】\n{knowledge}"
+            
+            if not product_knowledge:
+                self.play_sound()
+                return None
+                
+            # 组织上下文并调用LLM生成回复
+            context = product_knowledge.strip()
+            username = data.get("fromid", {}).get("nick", "unknown")
+            ccode = data.get("ccode")
+            
+            ans = self._call_llm(f"用户发送了商品链接: {message}", context, ccode)
+            
+            # 敏感词替换
+            if ans is not None:
+                sensitive_words = self.db.get_sensitive()
+                sensitive_dict = {item['key']: item['value'] for item in sensitive_words}
+                for word, replacement in sensitive_dict.items():
+                    ans = ans.replace(word, replacement)
+            
+            self.local_save_chatlog(username, message, ans, "AI(链接消息)")
+            return ans
+            
+        except Exception as e:
+            print(f"处理链接消息失败: {e}")
+            self.play_sound()
+            return None
 
     def linkmessage(self, data: dict) -> Optional[str]:
         self.play_sound()
