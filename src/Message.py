@@ -179,6 +179,26 @@ class Message:
             return f"参考资料显示：{snippet}……（如需进一步确认请稍等）"
         return "抱歉，当前网络繁忙，我稍后继续为您确认。"
 
+    # ====== 检测消息中的商品链接 ======
+    def _extract_product_urls(self, message: str) -> List[str]:
+        """从消息中提取商品链接"""
+        import re
+        # 匹配淘宝、天猫、京东等电商平台链接
+        patterns = [
+            r'https?://item\.taobao\.com/[^\s]+',
+            r'https?://detail\.tmall\.com/[^\s]+',
+            r'https?://[a-z]+\.taobao\.com/[^\s]+',
+            r'https?://item\.jd\.com/[^\s]+',
+            r'https?://[a-z]+\.jd\.com/[^\s]+'
+        ]
+        
+        urls = []
+        for pattern in patterns:
+            matches = re.findall(pattern, message)
+            urls.extend(matches)
+        
+        return urls
+
     # ====== 文本消息主逻辑 ======
     def textmessage(self, data: dict) -> Optional[str]:
         """
@@ -196,7 +216,15 @@ class Message:
         goodsinfo = data.get("goodsinfo")
         ccode = data.get("ccode")
 
-        # 1) 关键词命中
+        # 1) 检测消息中的商品链接并获取知识库内容（从文件系统读取）
+        product_urls = self._extract_product_urls(msg)
+        product_knowledge = ""
+        for url in product_urls:
+            knowledge = self.db.get_knowledge_by_url(url)
+            if knowledge:
+                product_knowledge += f"\n\n【商品链接知识库】\n{knowledge}"
+
+        # 2) 关键词命中
         store_id = goodsinfo.get('id') if goodsinfo else None
         kw_hit = self._match_keywords(msg, store_id=store_id)
         if kw_hit:
@@ -211,7 +239,7 @@ class Message:
             self.local_save_chatlog(username, msg, reply, "关键词匹配")
             return reply
 
-        # 2) 组织知识上下文（商品 details + KB 检索）
+        # 3) 组织知识上下文（商品 details + KB 检索 + 链接知识库）
         context_parts: List[str] = []
         if goodsinfo and goodsinfo.get("details"):
             context_parts.append(str(goodsinfo["details"]).strip())
@@ -219,6 +247,10 @@ class Message:
         local_ctx = self._retrieve_local_context(msg, top_k=3)
         if local_ctx:
             context_parts.append(local_ctx)
+            
+        # 添加商品链接知识库内容
+        if product_knowledge:
+            context_parts.append(product_knowledge.strip())
 
         full_context = "\n\n".join([c for c in context_parts if c])
 

@@ -41,6 +41,8 @@ class NewGoods(QMainWindow):
         shopname = self.ui.shopname.text()
         welcome = self.ui.welcome.toPlainText()
         instructions = self.ui.instructions.toPlainText()
+        knowledge_content = self.ui.knowledge_content.toPlainText()
+        
         if goodsurl == "":
             self.show_error_message("请输入商品链接")
         else:
@@ -53,9 +55,26 @@ class NewGoods(QMainWindow):
             self.show_error_message("请输入欢迎语")
         elif instructions == "":
             self.show_error_message("请输入商品说明书")
+        elif knowledge_content == "":
+            self.show_error_message("请输入知识库内容")
         else:
-            print(goodsurl, goodsname, shopname, welcome, instructions,product_id,"----------------------------------------------")
+            print(goodsurl, goodsname, shopname, welcome, instructions, knowledge_content, product_id,"----------------------------------------------")
             try:
+                # 保存到知识库（传递所有相关信息）
+                knowledge_result = self.db.add_product_knowledge(
+                    product_url=goodsurl,
+                    product_name=goodsname,
+                    shop_name=shopname,
+                    welcome_word=welcome,
+                    instructions=instructions,
+                    knowledge_content=knowledge_content,
+                    product_id=product_id
+                )
+                
+                if not knowledge_result['ok']:
+                    self.show_error_message(f"知识库保存失败: {knowledge_result['msg']}")
+                    return
+                
                 if self.goods:
                     g = self.goods
                     r = self.db.update_goods(g['id'],goodsname,goodsurl,shopname,instructions,welcome,product_id)
@@ -96,6 +115,7 @@ class NewGoods(QMainWindow):
         self.ui.shopname.clear()
         self.ui.welcome.clear()
         self.ui.instructions.clear()
+        self.ui.knowledge_content.clear()
 
     # 截取连接id
     def extract_id_from_url(self,url):
@@ -137,4 +157,3 @@ class NewGoods(QMainWindow):
     def mouseReleaseEvent(self, mouse_event):
         self.m_flag = False
         self.setCursor(QtGui.QCursor(QtCore.Qt.ArrowCursor))
-

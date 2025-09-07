@@ -96,8 +96,19 @@ class Ui_MainWindow(object):
         self.label_5.setFont(font2)
         self.instructions = QTextEdit(self.frame)
         self.instructions.setObjectName(u"instructions")
-        self.instructions.setGeometry(QRect(240, 180, 651, 311))
+        self.instructions.setGeometry(QRect(240, 180, 651, 141))
         self.instructions.setFont(font2)
+        
+        # 添加知识库内容输入框
+        self.label_6 = QLabel(self.frame)
+        self.label_6.setObjectName(u"label_6")
+        self.label_6.setGeometry(QRect(20, 330, 111, 16))
+        self.label_6.setFont(font2)
+        
+        self.knowledge_content = QTextEdit(self.frame)
+        self.knowledge_content.setObjectName(u"knowledge_content")
+        self.knowledge_content.setGeometry(QRect(20, 350, 871, 141))
+        self.knowledge_content.setFont(font2)
         self.close = QPushButton(self.frame)
         self.close.setObjectName(u"close")
         self.close.setGeometry(QRect(834, 10, 41, 31))
@@ -154,8 +165,9 @@ class Ui_MainWindow(object):
         self.label_4.setText(QCoreApplication.translate("MainWindow", u"\u5546\u54c1\u6b22\u8fce\u8bcd\uff1a", None))
         self.label_5.setText(QCoreApplication.translate("MainWindow", u"\u5546\u54c1\u8bf4\u660e\u4e66\uff1a", None))
         self.instructions.setPlaceholderText(QCoreApplication.translate("MainWindow", u"    \u5546\u54c1\u8bf4\u660e\u8bf4\u662fAI\u5bf9\u672c\u4ea7\u54c1\u8ba4\u77e5\u7684\u6765\u6e90\uff0c\u5199\u7684\u8d8a\u8be6\u7ec6AI\u80fd\u591f\u56de\u7b54\u7684\u95ee\u9898\u5c31\u8d8a\u591a\u3002\u6700\u597d\u7ed3\u5408\u4ee5\u5f80\u7684\u804a\u5929\u4fe1\u606f\u7f16\u5199\u3002", None))
+        self.label_6.setText(QCoreApplication.translate("MainWindow", u"\u77e5\u8bc6\u5e93\u5185\u5bb9\uff1a", None))
+        self.knowledge_content.setPlaceholderText(QCoreApplication.translate("MainWindow", u"    \u8fd9\u91cc\u8f93\u5165\u7684\u5185\u5bb9\u4f1a\u4f5c\u4e3a\u5546\u54c1\u77e5\u8bc6\u5e93\u4fdd\u5b58\uff0c\u5f53\u7528\u6237\u6d88\u606f\u4e2d\u5305\u542b\u8be5\u5546\u54c1\u94fe\u63a5\u65f6\uff0c\u4f1a\u81ea\u52a8\u4f7f\u7528\u8fd9\u4e9b\u5185\u5bb9\u8fdb\u884c\u56de\u590d", None))
         self.close.setText("")
         self.add.setText(QCoreApplication.translate("MainWindow", u"\u6dfb\u52a0\u5546\u54c1", None))
         self.delgoods.setText(QCoreApplication.translate("MainWindow", u"\u5220\u9664\u5546\u54c1", None))
     # retranslateUi
-

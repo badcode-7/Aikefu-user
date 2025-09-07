@@ -718,6 +718,23 @@ class Ui_MainWindow(object):
         """)
         self.rebuild_index_btn.setText(u"重建知识库索引")
 
+        # 添加商品知识库管理按钮
+        self.product_kb_btn = QPushButton(self.frame_6)
+        self.product_kb_btn.setObjectName(u"product_kb_btn")
+        self.product_kb_btn.setGeometry(QRect(10, 590, 380, 32))
+        self.product_kb_btn.setStyleSheet(u"""
+            QPushButton {
+                background-color: rgb(80, 180, 80);
+                border-radius: 4px;
+                color: white;
+                padding: 5px;
+            }
+            QPushButton:hover {
+                background-color: rgb(60, 160, 60);
+            }
+        """)
+        self.product_kb_btn.setText(u"管理商品知识库")
+
         # 知识库管理按钮
         self.kb_label = QLabel(self.frame_6)
         self.kb_label.setObjectName(u"kb_label")

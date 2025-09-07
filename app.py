@@ -373,14 +373,24 @@ class HomeWindow(QMainWindow):
         self.ui.mgctianjia.clicked.connect(self.add_new_sensitive)
         self.ui.home_but.clicked.connect(lambda: self.munuBut(0))
         self.ui.massg_but.clicked.connect(lambda: self.munuBut(1))  # 敏感词管理
+        self.ui.keyword_but.clicked.connect(lambda: self.munuBut(2))  # 商品说明书
         # 隐藏/禁用未实现功能按钮
         # self.ui.massg_but.setEnabled(False)      # 敏感词管理 - 已实现，启用
-        self.ui.keyword_but.setEnabled(False)    # 关键词管理
+        # self.ui.keyword_but.setEnabled(False)    # 关键词管理 - 现在启用商品说明书功能
         self.ui.my_but.setEnabled(False)
         self.ui.refresh.setEnabled(False)
-        self.ui.newgoodsBut.setEnabled(False)
+        # self.ui.newgoodsBut.setEnabled(False)  # 启用添加商品按钮
         self.ui.modify.setEnabled(False)
         self.ui.about.setEnabled(False)
+        
+        # 启用关键词管理按钮（商品说明书）
+        self.ui.keyword_but.setEnabled(True)
+        
+        # 绑定添加商品按钮事件
+        self.ui.newgoodsBut.clicked.connect(lambda: self.add_new_goods(None, 1))
+        
+        # 确保添加商品按钮是启用的
+        self.ui.newgoodsBut.setEnabled(True)
         
         # 启用系统设置按钮并绑定知识库功能
         self.ui.setup_but.clicked.connect(lambda: self.ui.stackedWidget.setCurrentIndex(3))
@@ -435,6 +445,7 @@ class HomeWindow(QMainWindow):
         # 添加知识库管理功能
         self.ui.add_kb_btn.clicked.connect(self.add_knowledge_file)
         self.ui.rebuild_index_btn.clicked.connect(self.rebuild_knowledge_index)
+        self.ui.product_kb_btn.clicked.connect(self.open_product_knowledge_manager)
         
         # 注入结束
         # 监听websocket服务
@@ -1395,7 +1406,7 @@ class HomeWindow(QMainWindow):
             QMessageBox.warning(self, "提示", "没有文件被复制")
             return
 
-        # 3) 触发构建（服务会做“有变化才重建”的判断）
+        # 3) 触发构建（服务会做"有变化才重建"的判断）
         try:
             resp = self.kb_client.build(kb_dir=None, force_full=False)
             self.append_log_message(f"KB 构建：{resp}")
@@ -1403,6 +1414,16 @@ class HomeWindow(QMainWindow):
         except Exception as e:
             self.append_log_message(f"/build 调用失败：{e}")
             QMessageBox.critical(self, "错误", f"构建失败：{e}")
+
+    def open_product_knowledge_manager(self):
+        """打开商品知识库管理器"""
+        try:
+            from src.knowledge_manager import KnowledgeManager
+            self.knowledge_manager = KnowledgeManager(self.db)
+            self.knowledge_manager.show()
+        except Exception as e:
+            self.append_log_message(f"打开知识库管理器失败: {str(e)}")
+            QMessageBox.critical(self, "错误", f"打开知识库管理器失败: {str(e)}")
 
 
 
