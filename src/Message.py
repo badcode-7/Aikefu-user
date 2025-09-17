@@ -41,12 +41,12 @@ class Message:
             base = os.getenv("KB_BASE", "http://127.0.0.1:38999")
             self.kb_client = KBClient(base_url=base)
 
-        # 文案参数
-        self.prompt_rule = (
-            "你是专业电商客服。优先依据下面【知识】回答用户问题；"
-            "若【知识】没有覆盖，请基于常识给出简明、安全的回答，并标注需要进一步核实。\n\n【知识】\n{context}"
-        )
-
+        # 文案参数 - 从配置文件中加载
+        self.prompt_rule = self._load_prompt_rule()
+        
+        # 保存配置引用
+        self.config = {}
+        
         # 关键词匹配阈值
         self.pipeidu = 75
 
@@ -57,6 +57,57 @@ class Message:
         # 会话记忆容器（按会话ID ccode 保存最近轮次）
         if not hasattr(Message, "sessions"):
             Message.sessions: Dict[str, List[Dict[str, str]]] = {}
+        
+    def _load_prompt_rule(self):
+        """从配置文件加载prompt规则"""
+        config_file = 'data/config.json'
+        default_prompt = (
+            "你是专业电商客服。优先依据下面【知识】回答用户问题；"
+            "若【知识】没有覆盖，请基于常识给出简明、安全的回答，并标注需要进一步核实。\n\n【知识】\n{context}"
+        )
+        
+        try:
+            if os.path.exists(config_file):
+                with open(config_file, 'r', encoding='utf-8') as f:
+                    config = json.load(f)
+                    
+                    # 构建完整的prompt
+                    role_desc = config.get("role_description", "").strip()
+                    general_role = config.get("general_role_description", "").strip()
+                    shop_desc = config.get("shop_description", "").strip()
+                    ai_style = config.get("ai_reply_style", "").strip()
+                    
+                    prompt_parts = []
+                    
+                    # 添加角色描述
+                    if role_desc:
+                        prompt_parts.append(f"【角色描述】\n{role_desc}")
+                    
+                    # 添加通用角色描述
+                    if general_role:
+                        prompt_parts.append(f"【通用角色描述】\n{general_role}")
+                    
+                    # 添加店铺说明
+                    if shop_desc:
+                        prompt_parts.append(f"【店铺说明】\n{shop_desc}")
+                    
+                    # 添加AI回复风格
+                    if ai_style:
+                        prompt_parts.append(f"【回复风格要求】\n{ai_style}")
+                    
+                    # 添加基础prompt
+                    prompt_parts.append("你是专业电商客服。优先依据下面【知识】回答用户问题；"
+                                      "若【知识】没有覆盖，请基于常识给出简明、安全的回答，并标注需要进一步核实。")
+                    
+                    # 添加知识部分
+                    prompt_parts.append("【知识】\n{context}")
+                    
+                    return "\n\n".join(prompt_parts)
+                    
+        except Exception as e:
+            print(f"加载prompt配置失败: {e}")
+            
+        return default_prompt
 
     # ====== 公共小工具 ======
     def sysmessage(self):

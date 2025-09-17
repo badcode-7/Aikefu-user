@@ -671,15 +671,59 @@ class Ui_MainWindow(object):
         self.label_5.setGeometry(QRect(10, 304, 21, 21))
         self.label_5.setStyleSheet(u"image: url(:/login/tongyong.png);")
 
-        # 知识库管理部分
+        # 店铺说明信息
+        self.label_13 = QLabel(self.frame_6)
+        self.label_13.setObjectName(u"label_13")
+        self.label_13.setGeometry(QRect(10, 520, 21, 21))
+        self.label_13.setStyleSheet(u"image: url(:/login/rengongzhineng.png);")
+        
+        self.label_14 = QLabel(self.frame_6)
+        self.label_14.setObjectName(u"label_14")
+        self.label_14.setGeometry(QRect(40, 520, 84, 22))
+        font6 = QFont()
+        font6.setFamilies([u"\u963f\u91cc\u5df4\u5df4\u666e\u60e0\u4f53 M"])
+        font6.setPointSize(10)
+        self.label_14.setFont(font6)
+        self.label_14.setText(u"店铺说明信息")
+        
+        self.shop_description = QTextEdit(self.frame_6)
+        self.shop_description.setObjectName(u"shop_description")
+        self.shop_description.setGeometry(QRect(10, 550, 391, 100))
+        self.shop_description.setStyleSheet(u"background-color: rgb(255, 255, 255);\n"
+"border-radius: 3px;")
+        self.shop_description.setPlaceholderText(u"在这里输入店铺的基本信息、服务承诺、发货政策等")
+
+        # AI自定义回复风格
+        self.label_15 = QLabel(self.frame_6)
+        self.label_15.setObjectName(u"label_15")
+        self.label_15.setGeometry(QRect(10, 660, 21, 21))
+        self.label_15.setStyleSheet(u"image: url(:/login/rengongzhineng.png);")
+        
+        self.label_16 = QLabel(self.frame_6)
+        self.label_16.setObjectName(u"label_16")
+        self.label_16.setGeometry(QRect(40, 660, 120, 22))
+        font6 = QFont()
+        font6.setFamilies([u"\u963f\u91cc\u5df4\u5df4\u666e\u60e0\u4f53 M"])
+        font6.setPointSize(10)
+        self.label_16.setFont(font6)
+        self.label_16.setText(u"AI自定义回复风格")
+        
+        self.ai_reply_style = QTextEdit(self.frame_6)
+        self.ai_reply_style.setObjectName(u"ai_reply_style")
+        self.ai_reply_style.setGeometry(QRect(10, 690, 391, 100))
+        self.ai_reply_style.setStyleSheet(u"background-color: rgb(255, 255, 255);\n"
+"border-radius: 3px;")
+        self.ai_reply_style.setPlaceholderText(u"在这里输入AI的回复风格要求，如语气、称呼、表情使用等")
+
+        # 知识库管理部分（调整位置）
         self.kb_label = QLabel(self.frame_6)
         self.kb_label.setObjectName(u"kb_label")
-        self.kb_label.setGeometry(QRect(10, 520, 21, 21))
+        self.kb_label.setGeometry(QRect(10, 800, 21, 21))
         self.kb_label.setStyleSheet(u"image: url(:/login/rengongzhineng.png);")
         
         self.kb_label_title = QLabel(self.frame_6)
         self.kb_label_title.setObjectName(u"kb_label_title")
-        self.kb_label_title.setGeometry(QRect(40, 520, 84, 22))
+        self.kb_label_title.setGeometry(QRect(40, 800, 84, 22))
         font_kb = QFont()
         font_kb.setFamilies([u"\u963f\u91cc\u5df4\u5df4\u666e\u60e0\u4f53 M"])
         font_kb.setPointSize(10)

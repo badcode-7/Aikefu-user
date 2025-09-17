@@ -422,9 +422,15 @@ class HomeWindow(QMainWindow):
         self.append_log_message(f"登录成功")
 
         # 获取config.json文件中的配置信息
-        self.pipeidu = 57
+        self.load_config()
         # 设置匹配度
         self.ui.pipeidu.setValue(self.pipeidu)
+        
+        # 加载配置到UI
+        self.ui.tishici.setText(self.config.get("role_description", ""))
+        self.ui.tishici2.setText(self.config.get("general_role_description", ""))
+        self.ui.shop_description.setText(self.config.get("shop_description", ""))
+        self.ui.ai_reply_style.setText(self.config.get("ai_reply_style", ""))
         # 绑定滑动事件
         self.ui.pipeidu.sliderMoved.connect(self.on_slider_moved)
 
@@ -446,6 +452,9 @@ class HomeWindow(QMainWindow):
         self.ui.add_kb_btn.clicked.connect(self.add_knowledge_file)
         self.ui.rebuild_index_btn.clicked.connect(self.rebuild_knowledge_index)
         self.ui.product_kb_btn.clicked.connect(self.open_product_knowledge_manager)
+        
+        # 绑定保存按钮
+        self.ui.updataBut.clicked.connect(self.updata_hosts)
         
         # 注入结束
         # 监听websocket服务
@@ -653,10 +662,53 @@ class HomeWindow(QMainWindow):
             except Exception as e:
                 print(e)
     # 滑动事件
+    def load_config(self):
+        """加载配置文件"""
+        config_file = 'data/config.json'
+        default_config = {
+            "pipeidu": 57,
+            "role_description": "",
+            "general_role_description": "",
+            "shop_description": "",
+            "ai_reply_style": ""
+        }
+        
+        try:
+            if os.path.exists(config_file):
+                with open(config_file, 'r', encoding='utf-8') as f:
+                    self.config = json.load(f)
+                    # 确保所有配置项都存在
+                    for key, value in default_config.items():
+                        if key not in self.config:
+                            self.config[key] = value
+            else:
+                self.config = default_config
+                self.save_config()
+                
+            # 设置匹配度
+            self.pipeidu = self.config.get("pipeidu", 57)
+            
+        except Exception as e:
+            print(f"加载配置文件失败: {e}")
+            self.config = default_config
+            self.pipeidu = 57
+
+    def save_config(self):
+        """保存配置文件"""
+        config_file = 'data/config.json'
+        try:
+            os.makedirs(os.path.dirname(config_file), exist_ok=True)
+            with open(config_file, 'w', encoding='utf-8') as f:
+                json.dump(self.config, f, ensure_ascii=False, indent=2)
+        except Exception as e:
+            print(f"保存配置文件失败: {e}")
+
     def on_slider_moved(self, event):
         value = self.ui.pipeidu.value()
         # 将值传递给config.json文件
         self.pipeidu = value
+        self.config["pipeidu"] = value
+        self.save_config()
 
     def extract_keys(self, keyword_list):
         if keyword_list is None:
@@ -908,10 +960,20 @@ class HomeWindow(QMainWindow):
 
     # 保存系统设置
     def updata_hosts(self):
-        paiurl = self.ui.tishici.toPlainText()
-        apikey = self.ui.tishici2.toPlainText()
-        # self.db.update_system_info(fastgpt_address=paiurl)
-        # self.db.update_system_info(fastgpt_key=apikey)
+        # 获取所有配置项
+        role_description = self.ui.tishici.toPlainText()
+        general_role_description = self.ui.tishici2.toPlainText()
+        shop_description = self.ui.shop_description.toPlainText()
+        ai_reply_style = self.ui.ai_reply_style.toPlainText()
+        
+        # 更新配置
+        self.config["role_description"] = role_description
+        self.config["general_role_description"] = general_role_description
+        self.config["shop_description"] = shop_description
+        self.config["ai_reply_style"] = ai_reply_style
+        
+        # 保存配置到文件
+        self.save_config()
         QMessageBox.critical(self, "成功", '保存成功')
 
     # 弹出错误信息
