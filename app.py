@@ -974,7 +974,7 @@ class HomeWindow(QMainWindow):
         
         # 保存配置到文件
         self.save_config()
-        QMessageBox.critical(self, "成功", '保存成功')
+        QMessageBox.information(self, "成功", '保存成功')
 
     # 弹出错误信息
     def show_error_message(self, message):

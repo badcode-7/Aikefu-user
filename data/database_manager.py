@@ -182,11 +182,108 @@ class DatabaseManager:
     def get_goods(self, name): return None
     def save_chatlog(self, data): return None
     def get_goodsByProductId(self, product_id): return None
-    def get_goodsByid(self, id, type=1): return None
-    def add_goods(self, *args, **kwargs): return {"ok": False, "msg": "未实现"}
-    def update_goods(self, *args, **kwargs): return {"ok": False, "msg": "未实现"}
-    def get_goodslist(self, type=1): return []
-    def delete_goods(self, id): return True
+    def get_goodsByid(self, id, type=1): 
+        """根据ID获取商品信息"""
+        try:
+            self._ensure_goods_table_exists()
+            query = "SELECT * FROM goods WHERE id = ? AND type = ?"
+            result = self.db.fetchone(query, (id, type))
+            if result:
+                return {
+                    'id': result[0],
+                    'product_name': result[1],
+                    'product_url': result[2],
+                    'store_name': result[3],
+                    'details': result[4],
+                    'welcome_word': result[5],
+                    'product_id': result[6],
+                    'type': result[7],
+                    'created_at': result[8],
+                    'updated_at': result[9]
+                }
+            return None
+        except Exception:
+            return None
+    
+    def _ensure_goods_table_exists(self):
+        """确保goods表存在"""
+        create_table_query = """
+        CREATE TABLE IF NOT EXISTS goods (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            product_name TEXT NOT NULL,
+            product_url TEXT NOT NULL,
+            store_name TEXT NOT NULL,
+            details TEXT,
+            welcome_word TEXT,
+            product_id TEXT,
+            type INTEGER DEFAULT 1,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+        """
+        self.db.execute(create_table_query)
+    
+    def add_goods(self, product_name, product_url, store_name, details, welcome_word, product_id=None, type=1):
+        """添加商品到数据库"""
+        try:
+            self._ensure_goods_table_exists()
+            query = """
+            INSERT INTO goods (product_name, product_url, store_name, details, welcome_word, product_id, type)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+            """
+            self.db.execute(query, (product_name, product_url, store_name, details, welcome_word, product_id, type))
+            return {"ok": True, "msg": "添加成功"}
+        except Exception as e:
+            return {"ok": False, "msg": f"添加失败: {str(e)}"}
+    
+    def update_goods(self, id, product_name, product_url, store_name, details, welcome_word, product_id=None):
+        """更新商品信息"""
+        try:
+            self._ensure_goods_table_exists()
+            query = """
+            UPDATE goods 
+            SET product_name = ?, product_url = ?, store_name = ?, details = ?, welcome_word = ?, product_id = ?, updated_at = CURRENT_TIMESTAMP
+            WHERE id = ?
+            """
+            self.db.execute(query, (product_name, product_url, store_name, details, welcome_word, product_id, id))
+            return {"ok": True, "msg": "更新成功"}
+        except Exception as e:
+            return {"ok": False, "msg": f"更新失败: {str(e)}"}
+    def get_goodslist(self, type=1): 
+        """获取商品列表"""
+        try:
+            # 检查goods表是否存在，如果不存在则创建
+            self._ensure_goods_table_exists()
+            
+            query = "SELECT * FROM goods WHERE type = ? ORDER BY id DESC"
+            results = self.db.fetchall(query, (type,))
+            
+            goods_list = []
+            for row in results:
+                goods_list.append({
+                    'id': row[0],
+                    'product_name': row[1],
+                    'product_url': row[2],
+                    'store_name': row[3],
+                    'details': row[4],
+                    'welcome_word': row[5],
+                    'product_id': row[6],
+                    'type': row[7],
+                    'created_at': row[8],
+                    'updated_at': row[9]
+                })
+            return goods_list
+        except Exception:
+            return []
+    
+    def delete_goods(self, id): 
+        """删除商品"""
+        try:
+            query = "DELETE FROM goods WHERE id = ?"
+            self.db.execute(query, (id,))
+            return True
+        except Exception:
+            return False
     
     # 新增：商品链接知识库关联功能（直接保存到文件，不使用数据库）
     def add_product_knowledge(self, product_url, product_name, shop_name, welcome_word, instructions, knowledge_content, product_id=None):

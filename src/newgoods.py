@@ -45,18 +45,25 @@ class NewGoods(QMainWindow):
         
         if goodsurl == "":
             self.show_error_message("请输入商品链接")
+            return
         else:
             product_id = self.extract_id_from_url(goodsurl)
+            
         if goodsname == "":
             self.show_error_message("请输入商品名称")
+            return
         elif shopname == "":
             self.show_error_message("请输入店铺名称")
+            return
         elif welcome == "":
             self.show_error_message("请输入欢迎语")
+            return
         elif instructions == "":
             self.show_error_message("请输入商品说明书")
+            return
         elif knowledge_content == "":
             self.show_error_message("请输入知识库内容")
+            return
         else:
             print(goodsurl, goodsname, shopname, welcome, instructions, knowledge_content, product_id,"----------------------------------------------")
             try:
@@ -78,7 +85,7 @@ class NewGoods(QMainWindow):
                 if self.goods:
                     g = self.goods
                     r = self.db.update_goods(g['id'],goodsname,goodsurl,shopname,instructions,welcome,product_id)
-                    if r['code'] == 0:
+                    if not r['ok']:
                         self.show_error_message(r['msg'])
                     else:
                         self.show_success_message("修改商品成功")
@@ -86,7 +93,7 @@ class NewGoods(QMainWindow):
                         self.close()
                 else:
                     r = self.db.add_goods(goodsname,goodsurl,shopname,instructions,welcome,product_id)
-                    if r['code'] == 0:
+                    if not r['ok']:
                         self.show_error_message(r['msg'])
                     else:
                         self.show_success_message("添加商品成功")
